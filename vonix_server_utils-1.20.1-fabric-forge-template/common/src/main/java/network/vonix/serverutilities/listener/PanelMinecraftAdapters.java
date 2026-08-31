@@ -33,7 +33,7 @@ import java.util.function.Supplier;
 /**
  * Minecraft-backed collaborators. Unit tests bind in-memory fakes instead.
  */
-public final class PanelMinecraftAdapters {
+final class PanelMinecraftAdapters {
 
     private PanelMinecraftAdapters() {}
 

@@ -15,7 +15,7 @@ import java.util.UUID;
  * Test seams for {@link PanelService}. Production adapters talk to existing
  * VSU managers; unit tests bind in-memory fakes so Minecraft is not required.
  */
-public final class PanelCollaborators {
+final class PanelCollaborators {
 
     @FunctionalInterface
     public interface HomeDirectory {
