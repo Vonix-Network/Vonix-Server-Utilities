@@ -1,4 +1,4 @@
-package network.vonix.serverutilities.features.panel;
+package network.vonix.serverutilities.listener;
 
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
