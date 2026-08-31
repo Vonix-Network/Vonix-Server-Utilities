@@ -3,7 +3,7 @@
 ## Repository identity
 
 - **Repository:** `Vonix-Network/Vonix-Server-Utilities`
-- **Canonical checkout for this candidate:** `/root/work/vsu-v2.0.2-website-separation-20260831/source`
+- **Canonical checkout for this candidate:** `/root/work/vsu-v2.0.2-website-separation-20260831-r12/source`
 - **Default branch:** `master`
 - **Project release line:** `2.0.2`
 - **License posture:** All Rights Reserved (Vonix Network)
