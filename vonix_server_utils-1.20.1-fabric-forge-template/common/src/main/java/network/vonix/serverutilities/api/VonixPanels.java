@@ -1,7 +1,7 @@
 package network.vonix.serverutilities.api;
 
 import java.util.Optional;
-import network.vonix.serverutilities.listener.PanelRegistry;
+
 
 /**
  * Read-only access to the optional {@link VonixPanel} implementation.
@@ -16,6 +16,18 @@ public final class VonixPanels {
     private VonixPanels() {}
 
     public static Optional<VonixPanel> current() {
-        return PanelRegistry.current();
+        try {
+            Class<?> registry = Class.forName(
+                    "network.vonix.serverutilities.listener.PanelRegistry",
+                    false,
+                    VonixPanels.class.getClassLoader());
+            java.lang.reflect.Method current = registry.getDeclaredMethod("current");
+            current.setAccessible(true);
+            Object value = current.invoke(null);
+            if (!(value instanceof Optional<?> optional)) return Optional.empty();
+            return optional.filter(VonixPanel.class::isInstance).map(VonixPanel.class::cast);
+        } catch (ReflectiveOperationException | RuntimeException ignored) {
+            return Optional.empty();
+        }
     }
 }

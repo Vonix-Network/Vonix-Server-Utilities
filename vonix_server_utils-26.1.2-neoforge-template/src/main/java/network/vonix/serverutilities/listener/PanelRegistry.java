@@ -4,13 +4,13 @@ import java.util.Optional;
 import network.vonix.serverutilities.api.VonixPanel;
 
 /** Internal lifecycle registry; only read access is exposed to companions. */
-public final class PanelRegistry {
+final class PanelRegistry {
 
     private static volatile VonixPanel instance;
 
     private PanelRegistry() {}
 
-    public static Optional<VonixPanel> current() {
+    static Optional<VonixPanel> current() {
         return Optional.ofNullable(instance);
     }
 

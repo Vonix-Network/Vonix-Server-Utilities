@@ -2,7 +2,7 @@
  * Public, SemVer-stable SPI surface for Vonix Server Utilities 1.20.1.
  *
  * <p>This is the only package treated as a public companion contract. Internal
- * packages ({@code command}, {@code database}, {@code features.panel} adapters,
+ * packages ({@code command}, {@code database}, {@code listener} adapters,
  * {@code donation_ranks}) may change without notice.
  *
  * <p>VSU 2.0.2 is a standalone public core. Optional companions consume this
