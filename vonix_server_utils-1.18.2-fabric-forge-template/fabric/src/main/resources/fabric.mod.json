@@ -5,11 +5,10 @@
   "name": "Vonix Server Utilities",
   "description": "Server-side utility mod.",
   "authors": [
-    "Me!"
+    "Vonix Network"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "sources": "https://github.com/Vonix-Network/ServerUtilities"
   },
   "license": "All Rights Reserved",
   "icon": "assets/vonix_server_utils/icon.png",

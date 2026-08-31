@@ -1,7 +1,7 @@
 package network.vonix.serverutilities.api;
 
 import java.util.Optional;
-import network.vonix.serverutilities.features.panel.PanelRegistry;
+import network.vonix.serverutilities.listener.PanelRegistry;
 
 /**
  * Read-only access to the optional {@link VonixPanel} implementation.

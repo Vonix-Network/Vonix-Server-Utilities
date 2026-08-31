@@ -36,7 +36,7 @@ tasks.register('companionSpiContractTest', JavaExec) {
     group = 'verification'
     description = 'Outside-mod SPI projections, capabilities, teleport rules, and event bounds.'
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'network.vonix.serverutilities.CompanionSpiContractTest'
+    mainClass = 'network.vonix.serverutilities.listener.CompanionSpiContractTest'
 }
 tasks.register('vsuStandaloneContractTest', JavaExec) {
     group = 'verification'

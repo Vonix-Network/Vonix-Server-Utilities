@@ -122,7 +122,7 @@ class LifecycleParityTest {
                 "26.1.2 must not keep website server-config polling");
         List<Path> shared = List.of(
                 src.resolve("crates/CratePlaytimeTask.java"),
-                src.resolve("features/panel/PanelBootstrap.java"),
+                src.resolve("listener/PanelBootstrap.java"),
                 src.resolve("moderation/ModerationBootstrap.java"));
         for (Path file : shared) {
             String text = Files.readString(file);

@@ -1,10 +1,11 @@
-package network.vonix.serverutilities.features.panel;
+package network.vonix.serverutilities.listener;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import network.vonix.serverutilities.VonixServerUtilities;
 import network.vonix.serverutilities.api.PanelFeatureKeys;
 import network.vonix.serverutilities.features.FeatureRegistry;
+import network.vonix.serverutilities.features.panel.PanelMinecraftAdapters;
 import network.vonix.serverutilities.teleport.TeleportManager;
 
 import java.util.Optional;
@@ -12,14 +13,14 @@ import java.util.Optional;
 /**
  * Wires the outside-mod SPI to live VSU managers. No network, no companion dependency.
  */
-public final class PanelBootstrap {
+final class PanelBootstrap {
 
     private static volatile MinecraftServer server;
     private static volatile PanelService service;
 
     private PanelBootstrap() {}
 
-    public static void start(MinecraftServer minecraftServer) {
+    static void start(MinecraftServer minecraftServer) {
         server = minecraftServer;
         FeatureRegistry registry = FeatureRegistry.getInstance();
         PanelEventBus bus = new PanelEventBus(() -> registry.isEnabled(PanelFeatureKeys.EVENTS));
@@ -38,7 +39,7 @@ public final class PanelBootstrap {
         VonixServerUtilities.LOGGER.info("[VonixSU] Outside-mod SPI bound (local gates, no remote).");
     }
 
-    public static void stop() {
+    static void stop() {
         TeleportManager.getInstance().setCompletionListener(null);
         PanelService current = service;
         if (current != null) current.unbind();
@@ -46,29 +47,29 @@ public final class PanelBootstrap {
         server = null;
     }
 
-    public static Optional<PanelService> service() {
+    static Optional<PanelService> service() {
         return Optional.ofNullable(service);
     }
 
-    public static void onJoin(ServerPlayer player) {
+    static void onJoin(ServerPlayer player) {
         PanelService current = service;
         if (current == null) return;
         current.publishJoin(player.getUUID(), player.getName().getString());
     }
 
-    public static void onQuit(ServerPlayer player) {
+    static void onQuit(ServerPlayer player) {
         PanelService current = service;
         if (current == null) return;
         current.publishQuit(player.getUUID(), player.getName().getString());
     }
 
-    public static void onDeath(ServerPlayer player) {
+    static void onDeath(ServerPlayer player) {
         PanelService current = service;
         if (current == null) return;
         current.publishDeath(
                 player.getUUID(),
                 player.getName().getString(),
-                Optional.of(player.level.dimension().location().toString()));
+                Optional.of(player.level().dimension().location().toString()));
     }
 
     private static void onTeleportCompleted(ServerPlayer player, String detail) {

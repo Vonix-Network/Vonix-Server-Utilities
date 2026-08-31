@@ -7,7 +7,7 @@ license = "All Rights Reserved"
 modId = "vonix_server_utilities"
 version = "${version}"
 displayName = "Vonix Server Utilities"
-authors = "Me!"
+authors = "Vonix Network"
 description = '''Server-side utility mod.'''
 #logoFile = ""
 

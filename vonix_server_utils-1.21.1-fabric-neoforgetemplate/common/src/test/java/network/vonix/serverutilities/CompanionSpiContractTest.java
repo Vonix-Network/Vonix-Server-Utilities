@@ -1,4 +1,4 @@
-package network.vonix.serverutilities;
+package network.vonix.serverutilities.listener;
 
 import network.vonix.serverutilities.api.HomeSnapshot;
 import network.vonix.serverutilities.api.InventorySlotSnapshot;
@@ -20,8 +20,8 @@ import network.vonix.serverutilities.api.VonixPanel;
 import network.vonix.serverutilities.api.VonixPanels;
 import network.vonix.serverutilities.features.FeatureRegistry;
 import network.vonix.serverutilities.features.panel.PanelCollaborators;
-import network.vonix.serverutilities.features.panel.PanelEventBus;
-import network.vonix.serverutilities.features.panel.PanelService;
+import network.vonix.serverutilities.listener.PanelEventBus;
+import network.vonix.serverutilities.listener.PanelService;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;

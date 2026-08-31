@@ -1,4 +1,4 @@
-package network.vonix.serverutilities.features.panel;
+package network.vonix.serverutilities.listener;
 
 import java.util.Optional;
 import network.vonix.serverutilities.api.VonixPanel;

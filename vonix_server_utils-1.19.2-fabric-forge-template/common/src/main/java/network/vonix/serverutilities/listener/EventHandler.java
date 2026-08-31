@@ -15,7 +15,7 @@ import network.vonix.serverutilities.command.WorldCommands;
 import network.vonix.serverutilities.config.ModConfig;
 import network.vonix.serverutilities.crates.CratePlaytimeTask;
 import network.vonix.serverutilities.features.FeatureRegistry;
-import network.vonix.serverutilities.features.panel.PanelBootstrap;
+
 import network.vonix.serverutilities.moderation.ModerationBootstrap;
 import network.vonix.serverutilities.platform.PlatformEvents;
 import network.vonix.serverutilities.teleport.TeleportManager;

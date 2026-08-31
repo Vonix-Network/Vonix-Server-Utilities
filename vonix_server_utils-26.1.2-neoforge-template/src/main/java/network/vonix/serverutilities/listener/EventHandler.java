@@ -25,7 +25,7 @@ import network.vonix.serverutilities.config.ModConfig;
 import network.vonix.serverutilities.crates.CratePlaytimeTask;
 import network.vonix.serverutilities.features.FeatureRegistry;
 import network.vonix.serverutilities.moderation.ModerationBootstrap;
-import network.vonix.serverutilities.features.panel.PanelBootstrap;
+
 import network.vonix.serverutilities.teleport.TeleportManager;
 
 /** Native NeoForge adapter for the 1.21.1 EventHandler lifecycle sequence. */

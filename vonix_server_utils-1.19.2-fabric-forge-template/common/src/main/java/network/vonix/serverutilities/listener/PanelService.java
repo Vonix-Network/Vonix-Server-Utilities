@@ -1,4 +1,4 @@
-package network.vonix.serverutilities.features.panel;
+package network.vonix.serverutilities.listener;
 
 import network.vonix.serverutilities.VonixServerUtilities;
 import network.vonix.serverutilities.api.HomeSnapshot;
@@ -21,6 +21,7 @@ import network.vonix.serverutilities.api.ServerSnapshot;
 import network.vonix.serverutilities.api.VonixPanel;
 import network.vonix.serverutilities.api.VonixPanels;
 import network.vonix.serverutilities.features.FeatureRegistry;
+import network.vonix.serverutilities.features.panel.PanelCollaborators;
 
 import java.util.List;
 import java.util.Objects;
@@ -32,9 +33,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * Internal outside-mod SPI adapter. Uses existing managers through
  * {@link PanelCollaborators}; never exposes JDBC or command execution.
  */
-public final class PanelService implements VonixPanel {
+final class PanelService implements VonixPanel {
 
-    public static final String MINECRAFT_VERSION = "1.21.1";
+    public static final String MINECRAFT_VERSION = "1.19.2";
     public static final long TELEPORT_COOLDOWN_MS = 3000L;
 
     private final FeatureRegistry features;
@@ -47,7 +48,7 @@ public final class PanelService implements VonixPanel {
     private final PanelCollaborators.ServerThreads threads;
     private final ConcurrentHashMap<UUID, Long> lastTeleport = new ConcurrentHashMap<>();
 
-    public PanelService(
+    PanelService(
             FeatureRegistry features,
             PanelEventBus events,
             PanelCollaborators.HomeDirectory homes,
@@ -78,7 +79,7 @@ public final class PanelService implements VonixPanel {
         lastTeleport.clear();
     }
 
-    public PanelEventBus eventBus() {
+    PanelEventBus eventBus() {
         return events;
     }
 

@@ -1,4 +1,4 @@
-package network.vonix.serverutilities.features.panel;
+package network.vonix.serverutilities.listener;
 
 import network.vonix.serverutilities.VonixServerUtilities;
 import network.vonix.serverutilities.api.PanelDelivery;
@@ -18,7 +18,7 @@ import java.util.function.BooleanSupplier;
 /**
  * Bounded in-memory outside-mod event bus. No HTTP or storage work.
  */
-public final class PanelEventBus {
+final class PanelEventBus {
 
     public static final int MAX_LISTENERS = 8;
     public static final int MAX_BUFFER = 64;
@@ -88,7 +88,7 @@ public final class PanelEventBus {
         return activeListenerCount();
     }
 
-    public synchronized void reset() {
+    synchronized void reset() {
         listeners.clear();
         buffer.clear();
         droppedOldest = 0;
