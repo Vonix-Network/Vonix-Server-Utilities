@@ -1,6 +1,6 @@
-package network.vonix.serverutilities.features.panel;
+package network.vonix.serverutilities.listener;
 
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -72,7 +72,7 @@ public final class PanelMinecraftAdapters {
     }
 
     static String itemId(ItemStack stack) {
-        ResourceLocation id = Registry.ITEM.getKey(stack.getItem());
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         return id == null ? "minecraft:air" : id.toString();
     }
 
@@ -108,7 +108,7 @@ public final class PanelMinecraftAdapters {
                     playerId,
                     p.getName().getString(),
                     true,
-                    Optional.of(p.level.dimension().location().toString()),
+                    Optional.of(p.level().dimension().location().toString()),
                     OptionalDouble.of(p.getHealth()),
                     OptionalDouble.of(p.getMaxHealth()),
                     OptionalInt.of(p.getFoodData().getFoodLevel()),

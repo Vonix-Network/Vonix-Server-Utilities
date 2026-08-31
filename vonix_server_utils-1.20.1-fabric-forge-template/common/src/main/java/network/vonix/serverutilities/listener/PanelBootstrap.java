@@ -5,7 +5,7 @@ import net.minecraft.server.level.ServerPlayer;
 import network.vonix.serverutilities.VonixServerUtilities;
 import network.vonix.serverutilities.api.PanelFeatureKeys;
 import network.vonix.serverutilities.features.FeatureRegistry;
-import network.vonix.serverutilities.features.panel.PanelMinecraftAdapters;
+import network.vonix.serverutilities.listener.PanelMinecraftAdapters;
 import network.vonix.serverutilities.teleport.TeleportManager;
 
 import java.util.Optional;

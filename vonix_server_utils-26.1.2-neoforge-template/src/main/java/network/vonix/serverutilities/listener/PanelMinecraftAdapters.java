@@ -1,7 +1,7 @@
-package network.vonix.serverutilities.features.panel;
+package network.vonix.serverutilities.listener;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -72,7 +72,7 @@ public final class PanelMinecraftAdapters {
     }
 
     static String itemId(ItemStack stack) {
-        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         return id == null ? "minecraft:air" : id.toString();
     }
 
@@ -108,7 +108,7 @@ public final class PanelMinecraftAdapters {
                     playerId,
                     p.getName().getString(),
                     true,
-                    Optional.of(p.level().dimension().location().toString()),
+                    Optional.of(p.level().dimension().identifier().toString()),
                     OptionalDouble.of(p.getHealth()),
                     OptionalDouble.of(p.getMaxHealth()),
                     OptionalInt.of(p.getFoodData().getFoodLevel()),
@@ -181,7 +181,7 @@ public final class PanelMinecraftAdapters {
             ServerPlayer player = s.getPlayerList().getPlayer(playerId);
             if (player == null) return false;
             if (target instanceof PanelTeleportTarget.Spawn) {
-                var spawnPos = s.overworld().getSharedSpawnPos();
+                var spawnPos = s.overworld().getRespawnData().pos();
                 TeleportManager.getInstance().teleportPlayer(
                         player, s.overworld(),
                         spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, 0f, 0f,
@@ -206,7 +206,7 @@ public final class PanelMinecraftAdapters {
     }
 
     private static String worldId(ServerLevel level) {
-        return level.dimension().location().toString();
+        return level.dimension().identifier().toString();
     }
 
     private static final class Threads implements PanelCollaborators.ServerThreads {

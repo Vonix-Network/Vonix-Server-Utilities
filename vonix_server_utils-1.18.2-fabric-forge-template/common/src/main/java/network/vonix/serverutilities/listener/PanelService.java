@@ -21,7 +21,7 @@ import network.vonix.serverutilities.api.ServerSnapshot;
 import network.vonix.serverutilities.api.VonixPanel;
 import network.vonix.serverutilities.api.VonixPanels;
 import network.vonix.serverutilities.features.FeatureRegistry;
-import network.vonix.serverutilities.features.panel.PanelCollaborators;
+import network.vonix.serverutilities.listener.PanelCollaborators;
 
 import java.util.List;
 import java.util.Objects;

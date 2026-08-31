@@ -1,4 +1,4 @@
-package network.vonix.serverutilities.features.panel;
+package network.vonix.serverutilities.listener;
 
 import network.vonix.serverutilities.api.HomeSnapshot;
 import network.vonix.serverutilities.api.InventorySnapshot;
