@@ -1,3 +1,5 @@
+<!-- SUPERSEDED / internal historical audit. Not current VSU 2.0.2 behavior. Website/Venary HTTP and VonixCore-to-VSU are not part of the public core. -->
+
 # Vonix Server Utilities — Wiring + Cross-Version Parity Audit
 
 Read-only audit. Scope = 4 Architectury templates (1.18.2/1.19.2/1.20.1 = Forge+Fabric, J17; 1.21.1 = NeoForge+Fabric, J21).

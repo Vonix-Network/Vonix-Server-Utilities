@@ -1,7 +1,6 @@
 package network.vonix.serverutilities.config;
 
 import network.vonix.serverutilities.VonixServerUtilities;
-import network.vonix.serverutilities.venary.VenaryConfig;
 
 import java.io.*;
 import java.nio.file.*;
@@ -19,15 +18,13 @@ public final class ModConfig {
     private int deathBackDelaySeconds = 0;
     private int playtimeKeyIntervalMinutes = 60;
 
-    // ── Venary site-link integration ─────────────────────────────────────────
-    // All defaults keep the network layer OFF. Operator must opt in explicitly.
-    private boolean venaryEnabled              = false;
-    private String  venaryApiBase              = VenaryConfig.DEFAULT_API_BASE;
-    private String  venaryApiKey               = "";
-    private boolean venaryLoginJwtEnabled      = false;
-    private boolean venaryStatsSyncEnabled     = false;
-    private int     venaryStatsSyncIntervalMin = 15;
-    private int     venaryLinkCooldownSeconds  = 30;
+    private boolean panelEventsEnabled = false;
+    private boolean panelStatsEnabled = false;
+    private boolean panelDeathHistoryEnabled = true;
+    private boolean panelInventoryReadEnabled = false;
+    private boolean panelTeleportActionsEnabled = false;
+    private int spiTeleportCooldownSeconds = 3;
+
 
     private ModConfig() {}
 
@@ -67,18 +64,16 @@ public final class ModConfig {
         deathBackDelaySeconds = intOf(p, "death_back_delay_seconds", 0);
         playtimeKeyIntervalMinutes = Math.max(1, intOf(p, "playtime_key_interval_minutes", 60));
 
-        venaryEnabled              = boolOf(p, "venary_enabled", false);
-        venaryApiBase              = strOf(p,  "venary_api_base", VenaryConfig.DEFAULT_API_BASE);
-        venaryApiKey               = strOf(p,  "venary_api_key", "");
-        venaryLoginJwtEnabled      = boolOf(p, "venary_login_jwt_enabled", false);
-        venaryStatsSyncEnabled     = boolOf(p, "venary_stats_sync_enabled", false);
-        venaryStatsSyncIntervalMin = intOf(p,  "venary_stats_sync_interval_minutes", 15);
-        venaryLinkCooldownSeconds  = intOf(p,  "venary_link_cooldown_seconds", 30);
+        panelEventsEnabled = boolOf(p, "panel_events_enabled", false);
+        panelStatsEnabled = boolOf(p, "panel_stats_enabled", false);
+        panelDeathHistoryEnabled = boolOf(p, "panel_death_history_enabled", true);
+        panelInventoryReadEnabled = boolOf(p, "panel_inventory_read_enabled", false);
+        panelTeleportActionsEnabled = boolOf(p, "panel_teleport_actions_enabled", false);
+        spiTeleportCooldownSeconds = Math.max(0, intOf(p, "spi_teleport_cooldown_seconds", 3));
+
 
         VonixServerUtilities.LOGGER.info("[VonixSU] Config loaded (max_homes={}, tpa_timeout={}s, death_back_delay={}s)",
                 maxHomes, tpaTimeoutSeconds, deathBackDelaySeconds);
-        // NOTE: never log the raw api key. The Venary section uses the masked accessor.
-        VonixServerUtilities.LOGGER.info("[VonixSU] {}", getVenaryConfig());
     }
 
     private void writeDefaults(Path file) {
@@ -97,22 +92,13 @@ public final class ModConfig {
                         # Minutes of playtime required for each automatic Playtime Key.
                         playtime_key_interval_minutes=60
 
-                        # ─── Venary site-link integration ───────────────────────────────────
-                        # Master kill switch. When false the mod NEVER contacts the Venary API.
-                        venary_enabled=false
-                        # Base URL of the Venary API (no trailing slash).
-                        venary_api_base=https://api.vonix.network
-                        # API key issued by Venary for this server (mc_servers.api_key).
-                        # Paste it here exactly once. KEEP THIS FILE PRIVATE.
-                        venary_api_key=
-                        # If true, /login mints a Vonix JWT for the player. Default OFF.
-                        venary_login_jwt_enabled=false
-                        # If true, periodically POST per-player stats to Venary. Default OFF.
-                        venary_stats_sync_enabled=false
-                        # Stats sync interval in minutes (min 1).
-                        venary_stats_sync_interval_minutes=15
-                        # Per-player /link cooldown in seconds.
-                        venary_link_cooldown_seconds=30
+                        # ─── Outside-mod SPI gates (fail-closed except last-death) ──
+                        panel_events_enabled=false
+                        panel_stats_enabled=false
+                        panel_death_history_enabled=true
+                        panel_inventory_read_enabled=false
+                        panel_teleport_actions_enabled=false
+                        spi_teleport_cooldown_seconds=3
                         """);
             }
         } catch (IOException e) {
@@ -144,15 +130,35 @@ public final class ModConfig {
     public int getDeathBackDelaySeconds() { return deathBackDelaySeconds; }
     public int getPlaytimeKeyIntervalMinutes() { return playtimeKeyIntervalMinutes; }
 
-    /** Builds an immutable snapshot of the current Venary settings. */
-    public VenaryConfig getVenaryConfig() {
-        return new VenaryConfig(
-                venaryEnabled,
-                venaryApiBase,
-                venaryApiKey,
-                venaryLoginJwtEnabled,
-                venaryStatsSyncEnabled,
-                venaryStatsSyncIntervalMin,
-                venaryLinkCooldownSeconds);
+    public PanelGates panelGates() {
+        return new PanelGates(
+                panelEventsEnabled,
+                panelStatsEnabled,
+                panelDeathHistoryEnabled,
+                panelInventoryReadEnabled,
+                panelTeleportActionsEnabled);
     }
+
+    public int getSpiTeleportCooldownSeconds() { return spiTeleportCooldownSeconds; }
+
+    public void resetForTesting() {
+        maxHomes = 5;
+        tpaTimeoutSeconds = 120;
+        deathBackDelaySeconds = 0;
+        playtimeKeyIntervalMinutes = 60;
+        panelEventsEnabled = false;
+        panelStatsEnabled = false;
+        panelDeathHistoryEnabled = true;
+        panelInventoryReadEnabled = false;
+        panelTeleportActionsEnabled = false;
+        spiTeleportCooldownSeconds = 3;
+        configDir = null;
+    }
+
+    public record PanelGates(
+            boolean eventsEnabled,
+            boolean statsEnabled,
+            boolean deathHistoryEnabled,
+            boolean inventoryReadEnabled,
+            boolean teleportActionsEnabled) {}
 }

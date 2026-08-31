@@ -1,22 +1,31 @@
 /**
- * Public, SemVer-stable SPI surface for Vonix Server Utilities.
+ * Public, SemVer-stable SPI surface for Vonix Server Utilities 1.18.2.
  *
- * <p>This is the only package within VSU treated as a public contract. Everything else
- * ({@code inventory}, {@code command}, {@code donation_ranks}, etc.) is internal and may
- * change without notice between minor releases.
+ * <p>This is the only package treated as a public companion contract. Internal
+ * packages ({@code command}, {@code database}, {@code features.panel} adapters,
+ * {@code donation_ranks}) may change without notice.
  *
- * <p>Versioning policy:
+ * <p>VSU 2.0.2 is a standalone public core. Optional companions consume this
+ * package only. Website, Venary, HTTP, API-key, and Player Panel types are
+ * not part of this contract and must not be compiled against this package.
+ *
+ * <p>Versioning:
  * <ul>
- *   <li><b>MAJOR</b> (2.0.0, 3.0.0, …) — breaking changes allowed (interface methods removed
- *       or signatures changed).</li>
- *   <li><b>MINOR</b> (1.x.0) — additive only (new interfaces, new optional default methods).</li>
- *   <li><b>PATCH</b> (1.x.y) — bug fixes and documentation only.</li>
+ *   <li><b>MAJOR</b> — breaking SPI changes.</li>
+ *   <li><b>MINOR</b> — additive methods/types with fail-closed defaults.</li>
+ *   <li><b>PATCH</b> — fixes and documentation.</li>
  * </ul>
  *
- * <p>Primary entry points: {@link network.vonix.serverutilities.api.InventoryProvider},
- * {@link network.vonix.serverutilities.api.InventoryView},
- * {@link network.vonix.serverutilities.api.InventoryProviderRegistry}.
+ * <p>Entry points:
+ * <ul>
+ *   <li>{@link network.vonix.serverutilities.api.VonixPanels} — optional bound SPI.
+ *       Empty when VSU has not started. Companion presence does not enable features.</li>
+ *   <li>{@link network.vonix.serverutilities.api.VonixPanel} — immutable projections,
+ *       capability reporting, restricted spawn/named-home teleports, bounded events.</li>
+ *   <li>{@link network.vonix.serverutilities.api.InventoryProvider} — existing
+ *       {@code /backsee} inventory SPI. Panel inventory copies are read-only.</li>
+ * </ul>
  *
- * @since 1.5.0
+ * @since 2.0.2
  */
 package network.vonix.serverutilities.api;

@@ -1,3 +1,5 @@
+<!-- SUPERSEDED / internal historical audit. Not current VSU 2.0.2 behavior. Website/Venary HTTP and VonixCore-to-VSU are not part of the public core. -->
+
 # RECON — Venary Donation Ranks + Minecraft Server-Config Surface
 _Read-only recon. Source: PostgreSQL `venary_beta` (peer auth) + `/var/www/VenaryService/server/modules/`._
 

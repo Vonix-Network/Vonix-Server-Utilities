@@ -13,6 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Pins the 1.21.1 EventHandler startup/started/stopping/stopped sequence as
  * the requested-cell parity reference. 26.1.2 stays native NeoForge.
+ * Website/Venary HTTP, player-sync, server-config polling, and /link are
+ * not part of the 2.0.2 public core.
  */
 class LifecycleParityTest {
 
@@ -26,15 +28,12 @@ class LifecycleParityTest {
             "createCrate(\"event\", \"event\")",
             "recoverPendingClaims()",
             "KitManager.getInstance().loadFromJson",
-            "VenaryClient.init",
-            "PlayerSyncTask.register()",
+            "PanelBootstrap.start",
             "CratePlaytimeTask.register()",
-            "FeatureRegistry.getInstance()",
-            "ServerConfigClient.startPolling()"
+            "FeatureRegistry.getInstance()"
     };
 
     private static final String[] STARTED = {
-            "RankGroupSyncer.syncAll()",
             "ModerationBootstrap.serverStarted"
     };
 
@@ -45,10 +44,8 @@ class LifecycleParityTest {
     private static final String[] STOPPED = {
             "TeleportManager.getInstance().clear()",
             "AdminManager.getInstance().clear()",
-            "PlayerSyncTask.clear()",
             "CratePlaytimeTask.clear()",
-            "LinkCommands.clearCooldowns()",
-            "venary.shutdown()",
+            "PanelBootstrap.stop()",
             "getInstance().shutdown()",
             "getDatabase().close()"
     };
@@ -58,14 +55,21 @@ class LifecycleParityTest {
             "CrateCommands.register",
             "UtilityCommands.register",
             "WorldCommands.register",
-            "LinkCommands.register",
             "ModerationBootstrap.registerCommands"
     };
 
     private static final String[] TICK = {
-            "PlayerSyncTask.onServerTick",
-            "CratePlaytimeTask.onServerTick",
-            "ServerConfigClient.onTick"
+            "CratePlaytimeTask.onServerTick"
+    };
+
+    private static final String[] FORBIDDEN = {
+            "VenaryClient",
+            "PlayerSyncTask",
+            "ServerConfigClient",
+            "LinkCommands",
+            "RankGroupSyncer",
+            "RankSyncTask",
+            "venary.shutdown"
     };
 
     @Test
@@ -88,6 +92,8 @@ class LifecycleParityTest {
         assertContainsAll(cell2612, "26.1.2 EventHandler", COMMANDS);
         assertContainsAll(cell1211, "1.21.1 EventHandler", TICK);
         assertContainsAll(cell2612, "26.1.2 EventHandler", TICK);
+        assertAbsentAll(cell1211, "1.21.1 EventHandler", FORBIDDEN);
+        assertAbsentAll(cell2612, "26.1.2 EventHandler", FORBIDDEN);
     }
 
     @Test
@@ -110,10 +116,13 @@ class LifecycleParityTest {
     void twentySixSharedNamedLifecycleClassesDoNotImportNeoForge() throws IOException {
         Path root = ImportBoundaryTest.repoRoot();
         Path src = root.resolve("vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities");
+        assertFalse(Files.exists(src.resolve("venary/PlayerSyncTask.java")),
+                "26.1.2 must not keep the Venary player-sync task");
+        assertFalse(Files.exists(src.resolve("features/ServerConfigClient.java")),
+                "26.1.2 must not keep website server-config polling");
         List<Path> shared = List.of(
                 src.resolve("crates/CratePlaytimeTask.java"),
-                src.resolve("venary/PlayerSyncTask.java"),
-                src.resolve("features/ServerConfigClient.java"),
+                src.resolve("features/panel/PanelBootstrap.java"),
                 src.resolve("moderation/ModerationBootstrap.java"));
         for (Path file : shared) {
             String text = Files.readString(file);
@@ -127,6 +136,12 @@ class LifecycleParityTest {
     private static void assertContainsAll(String source, String label, String[] tokens) {
         for (String token : tokens) {
             assertTrue(source.contains(token), label + " missing lifecycle token: " + token);
+        }
+    }
+
+    private static void assertAbsentAll(String source, String label, String[] tokens) {
+        for (String token : tokens) {
+            assertFalse(source.contains(token), label + " still contains removed connector token: " + token);
         }
     }
 }

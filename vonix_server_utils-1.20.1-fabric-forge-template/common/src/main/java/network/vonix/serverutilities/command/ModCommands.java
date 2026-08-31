@@ -18,7 +18,6 @@ import network.vonix.serverutilities.features.PermissionGate;
 import network.vonix.serverutilities.homes.HomeManager;
 import network.vonix.serverutilities.kits.KitManager;
 import network.vonix.serverutilities.teleport.TeleportManager;
-import network.vonix.serverutilities.venary.LinkCommands;
 import network.vonix.serverutilities.warps.WarpManager;
 
 import java.util.UUID;
@@ -613,9 +612,7 @@ public final class ModCommands {
         ctx.getSource().sendSuccess(
                 () -> Component.literal("§6[VSU] §fStatus: §aOnline §7(" + players + "/" + max + ")"), false);
         ctx.getSource().sendSuccess(
-                () -> Component.literal("§7Modules: homes, warps, kits, TPA, back, admin, world, venary"), false);
-        // Venary integration status (masked secrets).
-        LinkCommands.appendStatusLines(ctx.getSource());
+                () -> Component.literal("§7Modules: homes, warps, kits, TPA, back, admin, world"), false);
         // Feature flag summary.
         ctx.getSource().sendSuccess(() -> Component.literal(FeatureCommand.summaryLine()), false);
         return 1;
@@ -624,8 +621,8 @@ public final class ModCommands {
     private static int reloadConfig(CommandContext<CommandSourceStack> ctx) {
         try {
             boolean ok = ModConfig.INSTANCE.reload();
-            // Re-init the Venary client with the freshly-loaded settings.
-            network.vonix.serverutilities.venary.VenaryClient.init(ModConfig.INSTANCE.getVenaryConfig());
+            network.vonix.serverutilities.features.FeatureRegistry.applyPanelGatesIfPresent(
+                    ModConfig.INSTANCE.panelGates());
             // Reload kits.json so operators can hot-edit kit definitions too.
             try { KitManager.getInstance().reloadFromJson(ctx.getSource().getServer()); } catch (Throwable ignore) {}
             if (ok) ctx.getSource().sendSuccess(

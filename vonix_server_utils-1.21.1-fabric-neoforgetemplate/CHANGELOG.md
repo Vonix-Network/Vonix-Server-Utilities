@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [2.0.2] — 2026-08-31
+
+Standalone core: website connector removed; outside-mod SPI added; VSU-to-VSU recovery remains the active import.
+
 ## [2.0.1] — 2026-08-28
 
 ### Fixed

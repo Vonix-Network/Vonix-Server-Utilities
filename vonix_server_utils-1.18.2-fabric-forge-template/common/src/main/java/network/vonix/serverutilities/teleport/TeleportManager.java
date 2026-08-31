@@ -108,6 +108,23 @@ public final class TeleportManager {
      * Teleport {@code player} to the given position. Saves the player's
      * current location as the /back target BEFORE moving them.
      */
+
+    private volatile java.util.function.BiConsumer<ServerPlayer, String> completionListener;
+
+    public void setCompletionListener(java.util.function.BiConsumer<ServerPlayer, String> listener) {
+        this.completionListener = listener;
+    }
+
+    public void teleportPlayer(ServerPlayer player, ServerLevel level,
+                               double x, double y, double z, float yaw, float pitch, String reason) {
+        teleportPlayer(player, level, x, y, z, yaw, pitch);
+        java.util.function.BiConsumer<ServerPlayer, String> listener = completionListener;
+        if (listener != null && reason != null) {
+            try { listener.accept(player, reason); }
+            catch (RuntimeException ignored) {}
+        }
+    }
+
     public void teleportPlayer(ServerPlayer player, ServerLevel level,
                                double x, double y, double z, float yaw, float pitch) {
         saveLastLocation(player);

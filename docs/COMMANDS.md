@@ -12,7 +12,7 @@ Every command goes through `PermissionGate`: if LuckPerms is installed the liste
 - [Admin](#admin) — `/heal`, `/fly`, `/god`, `/vanish`, `/gm`, `/vonixsu`
 - [Moderation](#moderation) — `/ban`, `/mute`, `/kick`, `/warn`, `/banlist`
 - [World](#world) — `/weather`, `/time`, `/day`, `/night`, `/lightning`, `/smite`
-- [Venary](#venary) — `/link`, `/unlink`
+- ~~Venary `/link` `/unlink`~~ — removed in 2.0.2; website account linking is not part of VSU core.
 
 ---
 
@@ -194,12 +194,9 @@ See [MODERATION.md](MODERATION.md) for the full operator workflow, duration synt
 
 ---
 
-## Venary
+## Website / Venary
 
-| Command | Usage | Node | Op fallback | Description |
-|---|---|---|---|---|
-| `/link` | `/link` | `vsu.command.link` | 0 | Begin the link flow to associate your in-game account with Venary. |
-| `/unlink` | `/unlink` | `vsu.command.link` | 0 | Disconnect your Venary link. |
+`/link` and `/unlink` were removed in 2.0.2. Website account linking, Venary HTTP, and API keys are not part of VSU core.
 
 ---
 

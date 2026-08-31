@@ -1,3 +1,5 @@
+<!-- SUPERSEDED / internal historical audit. Not current VSU 2.0.2 behavior. Website/Venary HTTP and VonixCore-to-VSU are not part of the public core. -->
+
 # Audit: VonixCore → VonixServerUtilities Auto-Migration
 
 Scope: Architectury monorepo at `/root/DEV/Vonix-Server-Utilities-Architechtury`.

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.2] - 2026-08-31
+
+### Changed
+- Removed the Venary/website HTTP connector, API-key configuration, `/link`/`/unlink` transport, player-stat sync, remote server-config polling, and website donation-rank synchronization from every supported lane. VSU is a standalone public core.
+- Added a SemVer-stable outside-mod SPI (`VonixPanels` / `VonixPanel`) with immutable player/server projections, capability reporting, permission-checked spawn/named-home teleport requests, and bounded lifecycle events. Companions are optional and not shipped in this repository.
+- Startup import is VSU-to-VSU retained `data.db` recovery only. VonixCore-to-VSU is no longer the current migration path.
+
+### Compatibility
+- Local commands, permissions, homes, warps, back/death storage, inventory providers, and the SQLite schema are unchanged. Optional companions must compile against the public `network.vonix.serverutilities.api` package only.
+
 ## [2.0.1] - 2026-08-28
 
 ### Fixed

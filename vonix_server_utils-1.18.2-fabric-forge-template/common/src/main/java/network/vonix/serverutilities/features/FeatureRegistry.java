@@ -4,6 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import network.vonix.serverutilities.VonixServerUtilities;
+import network.vonix.serverutilities.api.PanelFeatureKeys;
+import network.vonix.serverutilities.config.ModConfig;
 import network.vonix.serverutilities.database.Database;
 
 import java.sql.Connection;
@@ -17,20 +19,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * In-memory feature-flag + feature-settings + donation-rank table.
+ * In-memory feature-flag + feature-settings table.
  *
- * <p>Single source of truth at runtime: every command predicate and every
- * RankSyncTask consult this registry. The canonical source over time is the
- * Venary backend ({@code GET /minecraft/server-config}) — {@link ServerConfigClient}
- * polls it and calls {@link #update(JsonObject)} on every change.
- *
- * <p><b>First-run heuristic.</b> On first construction we ask the SQLite DB
- * whether {@code vsu_homes}, {@code vsu_warps}, or {@code vsu_kit_cooldowns}
- * contains any rows. If so, the corresponding feature is auto-enabled in
- * memory so a freshly-upgraded server isn't accidentally locked out of its
- * own data while we wait for the first /server-config poll to land. The
- * auto-enabled flags are <i>local-only</i> — the next successful poll
- * overwrites them with the canonical value from the dashboard.
+ * <p>Flags are local: properties file, first-run heuristics, and
+ * {@code /vonixsu feature} toggles. Remote website polling is not used.
+ * Outside-mod SPI keys are seeded fail-closed except last-death exposure.
  *
  * <p>Thread-safety: backed by {@link ConcurrentHashMap}, all snapshots are
  * read-only views.
@@ -43,14 +36,17 @@ public final class FeatureRegistry {
     private final Map<String, Boolean> features = new ConcurrentHashMap<>();
     /** featureKey → settings JSON object (may be empty) */
     private final Map<String, JsonObject> settings = new ConcurrentHashMap<>();
-    /** Cached donation_ranks list (last seen from /server-config). */
+    /** Cached donation_ranks list. Empty unless a local {@link #update(JsonObject)} supplies them. */
     private volatile List<DonationRank> donationRanks = Collections.emptyList();
-    /** Last seen config_version — used by the poller to detect changes. */
+    /** Last seen config_version from a local {@link #update(JsonObject)} payload. */
     private volatile int configVersion = -1;
-    /** True once a real /server-config response has populated this registry. */
+    /** True once {@link #update(JsonObject)} has populated this registry. Unused for remote polling. */
     private volatile boolean hydratedFromBackend = false;
 
-    private FeatureRegistry() {}
+    private FeatureRegistry() {
+        seedPanelDefaults();
+        applyPanelGates(ModConfig.INSTANCE.panelGates());
+    }
 
     /** Lazy singleton accessor — first call runs the heuristic. */
     public static FeatureRegistry getInstance() {
@@ -68,13 +64,27 @@ public final class FeatureRegistry {
     }
 
     /** Test seam — wipes the singleton so tests can re-bootstrap. */
-    static synchronized void resetForTesting() { instance = null; }
+    public static synchronized void resetForTesting() { instance = null; }
+
+    public static void applyPanelGatesIfPresent(ModConfig.PanelGates gates) {
+        FeatureRegistry current = instance;
+        if (current != null) current.applyPanelGates(gates);
+    }
+
+    public static java.util.Map<String, Boolean> panelDefaultMap() {
+        java.util.Map<String, Boolean> defaults = new java.util.LinkedHashMap<>();
+        defaults.put(PanelFeatureKeys.EVENTS, false);
+        defaults.put(PanelFeatureKeys.STATS, false);
+        defaults.put(PanelFeatureKeys.DEATH_HISTORY, true);
+        defaults.put(PanelFeatureKeys.INVENTORY_READ, false);
+        defaults.put(PanelFeatureKeys.TELEPORT_ACTIONS, false);
+        return defaults;
+    }
 
     // ── Queries ─────────────────────────────────────────────────────────────
 
-    /** Returns true if a feature is enabled. Unknown keys default to true
-     *  (fail-open): we'd rather show a command than silently hide it before
-     *  the first poll has run. */
+    /** Returns true if a feature is enabled. Unknown command keys default to true
+     *  (fail-open). SPI keys are always present with explicit fail-closed defaults. */
     public boolean isEnabled(String featureKey) {
         if (featureKey == null) return true;
         Boolean v = features.get(featureKey);
@@ -116,12 +126,11 @@ public final class FeatureRegistry {
         return settings.get(featureKey);
     }
 
-    // ── Mutation: from /server-config ──────────────────────────────────────
+    // ── Mutation: local JSON payload ──────────────────────────────────────
 
     /**
-     * Replaces flags + settings + donation_ranks with the contents of a
-     * /server-config response body. Returns a {@link Delta} summarising what
-     * changed (used by the poller to log human-readable diffs).
+     * Replaces flags + settings from a local JSON object. Not a remote poller. Returns a {@link Delta} summarising what
+     * changed.
      */
     public synchronized Delta update(JsonObject configResponse) {
         if (configResponse == null) return Delta.EMPTY;
@@ -154,6 +163,9 @@ public final class FeatureRegistry {
             catch (Exception ignored) {}
         }
         this.hydratedFromBackend = true;
+        for (java.util.Map.Entry<String, Boolean> e : panelDefaultMap().entrySet()) {
+            features.putIfAbsent(e.getKey(), e.getValue());
+        }
         return Delta.between(before, features);
     }
 
@@ -169,6 +181,24 @@ public final class FeatureRegistry {
      * If the SQLite DB has rows in homes/warps/kit_cooldowns, mark those
      * features enabled in memory. Best-effort, ignored on any error.
      */
+    private void seedPanelDefaults() {
+        for (java.util.Map.Entry<String, Boolean> e : panelDefaultMap().entrySet()) {
+            features.putIfAbsent(e.getKey(), e.getValue());
+        }
+    }
+
+    public synchronized void applyPanelGates(ModConfig.PanelGates gates) {
+        if (gates == null) {
+            seedPanelDefaults();
+            return;
+        }
+        features.put(PanelFeatureKeys.EVENTS, gates.eventsEnabled());
+        features.put(PanelFeatureKeys.STATS, gates.statsEnabled());
+        features.put(PanelFeatureKeys.DEATH_HISTORY, gates.deathHistoryEnabled());
+        features.put(PanelFeatureKeys.INVENTORY_READ, gates.inventoryReadEnabled());
+        features.put(PanelFeatureKeys.TELEPORT_ACTIONS, gates.teleportActionsEnabled());
+    }
+
     private void runFirstRunHeuristic() {
         try {
             Database db = VonixServerUtilities.getInstance() == null
@@ -204,7 +234,7 @@ public final class FeatureRegistry {
 
     // ── Helper types ────────────────────────────────────────────────────────
 
-    /** Immutable view of a donation rank entry from /server-config. */
+    /** Immutable view of a locally supplied donation rank entry. */
     public static final class DonationRank {
         public final String slug;
         public final String name;

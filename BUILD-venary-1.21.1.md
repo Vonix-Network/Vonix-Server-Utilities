@@ -1,3 +1,5 @@
+<!-- SUPERSEDED / internal historical audit. Not current VSU 2.0.2 behavior. Website/Venary HTTP and VonixCore-to-VSU are not part of the public core. -->
+
 # BUILD — Venary site-link integration (1.21.1 template)
 
 Target: `vonix_server_utils-1.21.1-fabric-neoforgetemplate/`

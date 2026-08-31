@@ -8,15 +8,17 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import network.vonix.serverutilities.VonixServerUtilities;
 import network.vonix.serverutilities.admin.AdminManager;
-import network.vonix.serverutilities.command.*;
+import network.vonix.serverutilities.command.CrateCommands;
+import network.vonix.serverutilities.command.ModCommands;
+import network.vonix.serverutilities.command.UtilityCommands;
+import network.vonix.serverutilities.command.WorldCommands;
 import network.vonix.serverutilities.config.ModConfig;
 import network.vonix.serverutilities.crates.CratePlaytimeTask;
-import network.vonix.serverutilities.donation_ranks.*;
-import network.vonix.serverutilities.features.*;
+import network.vonix.serverutilities.features.FeatureRegistry;
+import network.vonix.serverutilities.features.panel.PanelBootstrap;
 import network.vonix.serverutilities.moderation.ModerationBootstrap;
 import network.vonix.serverutilities.platform.PlatformEvents;
 import network.vonix.serverutilities.teleport.TeleportManager;
-import network.vonix.serverutilities.venary.*;
 
 /** Shared behavior; Fabric and Forge modules provide event delivery. */
 public final class EventHandler {
@@ -30,7 +32,7 @@ public final class EventHandler {
     }
     private static void registerCommands(CommandDispatcher<CommandSourceStack> d) {
         ModCommands.register(d); CrateCommands.register(d); UtilityCommands.register(d); WorldCommands.register(d);
-        LinkCommands.register(d); ModerationBootstrap.registerCommands(d);
+        ModerationBootstrap.registerCommands(d);
         VonixServerUtilities.LOGGER.info("[VonixSU] All commands registered.");
     }
     private static void serverStarting(MinecraftServer s) {
@@ -42,17 +44,17 @@ public final class EventHandler {
             r.ensureSchema(VonixServerUtilities.getInstance().getDatabase().getConnection());
             r.createCrate("playtime", "playtime"); r.createCrate("event", "event"); r.recoverPendingClaims();
         } catch (Exception e) { VonixServerUtilities.LOGGER.error("[VSU] startup initialization failed", e); } });
-        VenaryClient.init(ModConfig.INSTANCE.getVenaryConfig()); PlayerSyncTask.register(); CratePlaytimeTask.register();
-        FeatureRegistry.getInstance(); ServerConfigClient.startPolling();
+        PanelBootstrap.start(s); CratePlaytimeTask.register();
+        FeatureRegistry.getInstance();
     }
-    private static void serverStarted(MinecraftServer s) { try { RankGroupSyncer.syncAll(); } catch (Throwable t) { VonixServerUtilities.LOGGER.warn("[VSU] rank sync failed: {}", t.getMessage()); } ModerationBootstrap.serverStarted(s); }
+    private static void serverStarted(MinecraftServer s) { ModerationBootstrap.serverStarted(s); }
     private static void serverStopping(MinecraftServer s) { ModerationBootstrap.serverStopping(s); }
     private static void serverStopped(MinecraftServer s) {
-        TeleportManager.getInstance().clear(); AdminManager.getInstance().clear(); PlayerSyncTask.clear(); CratePlaytimeTask.clear(); LinkCommands.clearCooldowns();
-        VenaryClient v = VenaryClient.get(); if (v != null) v.shutdown(); VonixServerUtilities.getInstance().shutdown(); VonixServerUtilities.getInstance().getDatabase().close();
+        TeleportManager.getInstance().clear(); AdminManager.getInstance().clear(); CratePlaytimeTask.clear(); PanelBootstrap.stop();
+        VonixServerUtilities.getInstance().shutdown(); VonixServerUtilities.getInstance().getDatabase().close();
     }
-    private static void serverTick(MinecraftServer s) { PlayerSyncTask.onServerTick(s); CratePlaytimeTask.onServerTick(s); ServerConfigClient.onTick(s); }
-    private static void playerJoin(ServerPlayer p) { UtilityCommands.onPlayerJoin(p); PlayerSyncTask.onPlayerJoin(p); RankSyncTask.onJoin(p); }
-    private static void playerQuit(ServerPlayer p) { UtilityCommands.onPlayerLeave(p.getUUID()); TeleportManager.getInstance().clearPlayer(p.getUUID()); PlayerSyncTask.onPlayerLeave(p.getUUID()); LinkCommands.onPlayerLeave(p.getUUID()); }
-    private static void livingDeath(LivingEntity e, DamageSource s) { if (e instanceof ServerPlayer p) TeleportManager.getInstance().saveDeathLocation(p); }
+    private static void serverTick(MinecraftServer s) { CratePlaytimeTask.onServerTick(s); }
+    private static void playerJoin(ServerPlayer p) { UtilityCommands.onPlayerJoin(p); PanelBootstrap.onJoin(p); }
+    private static void playerQuit(ServerPlayer p) { UtilityCommands.onPlayerLeave(p.getUUID()); TeleportManager.getInstance().clearPlayer(p.getUUID()); PanelBootstrap.onQuit(p); }
+    private static void livingDeath(LivingEntity e, DamageSource s) { if (e instanceof ServerPlayer p) { TeleportManager.getInstance().saveDeathLocation(p); PanelBootstrap.onDeath(p); } }
 }

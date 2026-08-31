@@ -22,10 +22,10 @@ class PublicIdentityTest {
                 || common.contains("MOD_ID = \"vonix_server_utilities\""));
         assertTrue(neo2612.contains("MOD_ID  = \"vonix_server_utilities\"")
                 || neo2612.contains("MOD_ID = \"vonix_server_utilities\""));
-        assertTrue(common.contains("VERSION = \"2.0.1\""));
-        assertTrue(neo2612.contains("VERSION = \"2.0.1\""));
-        assertFalse(neo2612.contains("2.0.1-26.1.2.93-candidate"),
-                "public VERSION must stay 2.0.1; target suffix belongs on neither the artifact nor /vonixsu version");
+        assertTrue(common.contains("VERSION = \"2.0.2\""));
+        assertTrue(neo2612.contains("VERSION = \"2.0.2\""));
+        assertFalse(neo2612.contains("2.0.2-26.1.2.93-candidate"),
+                "public VERSION must stay 2.0.2; target suffix belongs on neither the artifact nor /vonixsu version");
     }
 
     @Test
@@ -56,7 +56,7 @@ class PublicIdentityTest {
         for (String meta : new String[] { fabric, neo1211, neo2612 }) {
             assertTrue(meta.contains("vonix_server_utilities"));
             assertTrue(meta.contains("Vonix Network"));
-            assertTrue(meta.contains("MIT"), "requested-cell metadata must use MIT, not a placeholder license");
+            assertTrue(meta.contains("All Rights Reserved"), "requested-cell metadata must use the repository license posture");
             assertFalse(meta.contains("Insert License Here"));
             assertFalse(meta.contains("Me!"));
             assertFalse(meta.contains("example-mod"));

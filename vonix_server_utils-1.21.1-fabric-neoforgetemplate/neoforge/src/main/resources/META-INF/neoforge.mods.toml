@@ -1,6 +1,6 @@
 modLoader = "javafml"
 loaderVersion = "[4,)"
-license = "MIT"
+license = "All Rights Reserved"
 
 [[mods]]
 modId = "vonix_server_utilities"
@@ -8,7 +8,7 @@ version = "${version}"
 displayName = "Vonix Server Utilities"
 authors = "Vonix Network"
 description = '''
-Full-featured server utility mod: homes, warps, kits, TPA, teleport, admin tools, world commands, moderation, and Venary integration.
+Standalone server utility mod: homes, warps, kits, TPA, teleport, admin tools, world commands, and moderation.
 '''
 
 [[dependencies.vonix_server_utilities]]

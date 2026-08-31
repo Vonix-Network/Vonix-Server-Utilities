@@ -1,8 +1,8 @@
-# VSU 2.0.0 common-generation repository
+# VSU 2.0.2 common-generation repository
 
-This repository is the single source tree for the Vonix Server Utilities common-generation line. The common line starts at **2.0.0** and is published as the release label **`2.0.0`**.
+This repository is the single source tree for the Vonix Server Utilities common-generation line. The common line is **2.0.2**. Historical `2.0.0` and `2.0.1` tags remain immutable.
 
-`2.0.0` is the embedded stable release version for every supported lane and identifies the first common-generation release line beginning at `2.0.0`. Existing historical releases remain immutable.
+`2.0.2` is the embedded release version for every supported lane. VSU core is standalone; website companions consume the public SPI only.
 
 ## One repository, all supported Minecraft lanes
 
@@ -19,7 +19,7 @@ The root `core/` module contains platform-neutral code and tests. Each target di
 ## Release status
 
 - GitHub release automation: `.github/workflows/release.yml` runs the nine-lane build matrix on `v*` tags and attaches the resulting jars plus `SHA256SUMS` to a stable release.
-- Embedded project version: **`2.0.0`** for every supported lane.
+- Embedded project version: **`2.0.2`** for every supported lane.
 - Release validation: the tag-triggered workflow builds and packages all nine lanes and publishes SHA-256 checksums with each tagged release.
 - Installation: choose the artifact matching your Minecraft version, loader, and Java environment, then follow the installation steps in the main README.
 - The 26.1.2 artifact requires the matching NeoForge and Java 25 environment.

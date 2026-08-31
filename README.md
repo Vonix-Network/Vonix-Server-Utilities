@@ -1,10 +1,10 @@
 # Vonix Server Utilities (VSU)
 
-A server-side essentials mod for Minecraft — homes, warps, kits, teleport, social, admin tooling, moderation, and Venary site integration — built on **Architectury** for **Forge, NeoForge, and Fabric** across the supported Minecraft target versions.
+A server-side essentials mod for Minecraft — homes, warps, kits, teleport, social, admin tooling, and moderation — built on **Architectury** for **Forge, NeoForge, and Fabric** across the supported Minecraft target versions. VSU is standalone: it does not require Venary, the website, an API key, or a companion mod.
 
-**Current embedded mod version:** `2.0.1` (stable release) · **Common repository line:** `2.0.1` · See [CHANGELOG.md](CHANGELOG.md) · License: All Rights Reserved (Vonix Network)
+**Current embedded mod version:** `2.0.2` · **Common repository line:** `2.0.2` · See [CHANGELOG.md](CHANGELOG.md) · License: All Rights Reserved (Vonix Network)
 
-The Minecraft **26.1.2 / NeoForge 26.1.2.93** lane is included in the `2.0.1` stable release under `vonix_server_utils-26.1.2-neoforge-template/`. Its artifact uses the same exact embedded release version as the other lanes.
+The Minecraft **26.1.2 / NeoForge 26.1.2.93** lane is included in the `2.0.2` line under `vonix_server_utils-26.1.2-neoforge-template/`. Its artifact uses the same exact embedded release version as the other lanes.
 
 ---
 
@@ -14,7 +14,7 @@ The Minecraft **26.1.2 / NeoForge 26.1.2.93** lane is included in the `2.0.1` st
 - **Admin toolkit** — vanish, god, fly, heal, peek (`/invsee`, `/enderchest`, `/backsee`, `/accsee`), weather/time control.
 - **Moderation (v1.7.1)** — SQLite-backed `/tempban`, `/mute`, `/kick`, `/warn`, `/banlist` with duration parser, race-safe mute enforcement, and expiry sweeper.
 - **LuckPerms-aware permissions (v1.6.0)** — every command has a `vsu.*` permission node, with graceful vanilla op-level fallback when LuckPerms is absent.
-- **Venary site integration** — account linking (`/link`), periodic player sync, and automatic donation-rank → LuckPerms group sync.
+- **Outside-mod SPI** — optional companions may read immutable player/server projections, query capabilities, request spawn/named-home teleports, and observe bounded lifecycle events. See [docs/OUTSIDE-MOD-SPI.md](docs/OUTSIDE-MOD-SPI.md).
 
 ---
 
@@ -83,9 +83,7 @@ Full command reference: **[docs/COMMANDS.md](docs/COMMANDS.md)**.
 
 **World** — `/weather`, `/sun`, `/rain`, `/storm`, `/time`, `/day`, `/night`.
 
-**Venary integration** — `/link` and `/unlink` bind a Minecraft identity to a Vonix Network site account. An HTTP client started from config periodically syncs linked players.
-
-**Donation rank sync** — When LuckPerms is present, site-side donation ranks are mapped to LP groups and applied on join, refreshed live, and removed on expiry. Skipped entirely if LuckPerms is not installed.
+**Outside-mod SPI** — companions bind through `VonixPanels.current()`. No HTTP, API key, or website transport lives in VSU. Feature gates default fail-closed except last-death projection.
 
 ---
 
@@ -97,11 +95,16 @@ Config file: `config/vonix_server_utilities.properties` (generated on first laun
 max_homes=5
 tpa_timeout_seconds=120
 death_back_delay_seconds=0
+panel_events_enabled=false
+panel_stats_enabled=false
+panel_death_history_enabled=true
+panel_inventory_read_enabled=false
+panel_teleport_actions_enabled=false
 ```
 
-Subsystems can be toggled at runtime with `/feature enable|disable|list|reload|status <key>` — every feature category is gated by a `FeatureGate` key, so admins can disable moderation, Venary, or any feature group without uninstalling the mod.
+Subsystems can be toggled at runtime with `/vonixsu feature enable|disable|list|reload|status <key>` — every feature category is gated locally. Website/Venary remote flags are not used.
 
-Database: `config/vonix_server_utilities/data.db` (SQLite, WAL mode). Existing VSU databases are reused in place; retained VSU snapshots and VonixCore databases can be imported safely on first launch when present.
+Database: `config/vonix_server_utilities/data.db` (SQLite, WAL mode). Existing VSU databases are reused in place. On startup VSU recovers retained VSU `data.db` snapshots (homes and `/back`/`/backdeath` rows) without modifying the source. VonixCore-to-VSU is not the current migration path.
 
 ---
 

@@ -13,6 +13,7 @@ dependencies {
 
     // SQLite for persistent storage (homes, warps, kit cooldowns)
     compileOnly 'org.xerial:sqlite-jdbc:3.45.1.0'
+    testRuntimeOnly('org.xerial:sqlite-jdbc:3.45.1.0') { transitive = false }
 
     // LuckPerms API (optional runtime dep). compileOnly so the jar never bundles LP
     // and the mod runs fine on servers without it (NoClassDefFoundError is caught
@@ -34,7 +35,46 @@ tasks.register('muteStateTest', JavaExec) {
     mainClass = 'network.vonix.serverutilities.moderation.MuteStateTest'
 }
 
+
+tasks.register('websiteRemovalScanTest', JavaExec) {
+    group = 'verification'
+    description = 'Fails if executable Venary/website/API-key connector strings remain.'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'network.vonix.serverutilities.WebsiteRemovalScanTest'
+}
+tasks.register('companionSpiContractTest', JavaExec) {
+    group = 'verification'
+    description = 'Outside-mod SPI projections, capabilities, teleport rules, and event bounds.'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'network.vonix.serverutilities.CompanionSpiContractTest'
+}
+tasks.register('vsuStandaloneContractTest', JavaExec) {
+    group = 'verification'
+    description = 'Standalone VSU with no companion and no website client.'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'network.vonix.serverutilities.VsuStandaloneContractTest'
+}
+
+tasks.register('vsuLegacyMigrationTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs VSU database recovery, source-integrity, and back/death separation checks.'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'network.vonix.serverutilities.database.VsuLegacyMigrationTest'
+}
+
+
+tasks.register('versionConsistencyTest', JavaExec) {
+    group = 'verification'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'network.vonix.serverutilities.VersionConsistencyTest'
+}
+
 tasks.named('check') {
     dependsOn tasks.named('crateRulesTest')
     dependsOn tasks.named('muteStateTest')
+    dependsOn tasks.named('websiteRemovalScanTest')
+    dependsOn tasks.named('companionSpiContractTest')
+    dependsOn tasks.named('vsuStandaloneContractTest')
+    dependsOn tasks.named('versionConsistencyTest')
+    dependsOn tasks.named('vsuLegacyMigrationTest')
 }

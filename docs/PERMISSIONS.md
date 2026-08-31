@@ -67,7 +67,7 @@ Sorted alphabetically by command. Sub-variants (e.g. `/nick self` vs `/nick <pla
 | `/kit`, `/kits` | `vsu.command.kit` | 0 |
 | `/lag` | `vsu.admin.lag` | 2 |
 | `/lightning`, `/smite` | `vsu.admin.smite` | 2 |
-| `/link`, `/unlink` | `vsu.command.link` | 0 |
+| ~~`/link`, `/unlink`~~ (removed 2.0.2) | `vsu.command.link` | — |
 | `/list` | `vsu.command.utility` | 0 |
 | `/more` | `vsu.command.utility` | 0 |
 | `/mute`, `/tempmute`, `/unmute`, `/mutelist` | `vsu.mod.mute` | 3 |
@@ -121,7 +121,6 @@ Granted to everyone on first login. Covers basic player commands.
   - `vsu.command.nick`
   - `vsu.command.message`
   - `vsu.command.utility`
-  - `vsu.command.link`
 
 ```
 lp creategroup default-player
@@ -136,7 +135,6 @@ lp group default-player permission set vsu.command.spawn true
 lp group default-player permission set vsu.command.nick true
 lp group default-player permission set vsu.command.message true
 lp group default-player permission set vsu.command.utility true
-lp group default-player permission set vsu.command.link true
 ```
 
 ### trusted

@@ -9,10 +9,9 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import network.vonix.serverutilities.VonixServerUtilities;
+import network.vonix.serverutilities.config.ModConfig;
 import network.vonix.serverutilities.features.PermissionGate;
 import network.vonix.serverutilities.features.FeatureRegistry;
-import network.vonix.serverutilities.features.ServerConfigClient;
-import network.vonix.serverutilities.venary.VenaryClient;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -29,20 +28,9 @@ import java.util.TreeMap;
  *
  * <p>All operations require permission level 3 (server-op) or the console.
  *
- * <h2>In-game toggle limitation</h2>
- * The admin dashboard endpoint that mutates the canonical feature row uses
- * {@code authenticateToken + requireAdmin}; the mod's API key is NOT a user
- * token, so we cannot call it directly. Instead /vonixsu feature
- * enable/disable updates the LOCAL {@link FeatureRegistry} immediately AND
- * posts an audit row (event_type=feature_toggle). On the very next
- * /server-config poll the canonical dashboard state will sync back and
- * <b>overwrite</b> the local toggle. So in-game toggles are best thought of
- * as "until the next poll" — for permanent changes operators must use the
- * admin dashboard.
- *
- * <p>TODO(operator-review): add a mod-facing PATCH endpoint authenticated by
- * the api_key in Phase 2 so in-game toggles can persist.
+ * Local toggles persist in memory until restart or config reload.
  */
+
 public final class FeatureCommand {
 
     private FeatureCommand() {}
@@ -72,9 +60,9 @@ public final class FeatureCommand {
         Map<String, Boolean> snap = new TreeMap<>(reg.snapshot());
         ctx.getSource().sendSuccess(Component.literal(
                 "§6[VSU] §fFeatures §7(config v" + reg.getConfigVersion()
-                        + (reg.isHydratedFromBackend() ? "" : ", §enot yet synced") + "§7):"), false);
+                        + (reg.isHydratedFromBackend() ? "" : "") + "§7):"), false);
         if (snap.isEmpty()) {
-            ctx.getSource().sendSuccess(Component.literal("  §7(none known yet — waiting for first /server-config)"), false);
+            ctx.getSource().sendSuccess(Component.literal("  §7(none known yet — none known — enable features locally)"), false);
             return 1;
         }
         for (Map.Entry<String, Boolean> e : snap.entrySet()) {
@@ -92,7 +80,7 @@ public final class FeatureCommand {
         String label = enable ? "enabled" : "disabled";
 
         ctx.getSource().sendSuccess(Component.literal(
-                "§a[VSU] Feature §e" + key + "§a " + label + " §7(local-only — will be overwritten by next /server-config poll)."), true);
+                "§a[VSU] Feature §e" + key + "§a " + label + " §7(local)."), true);
         if (!changed) {
             ctx.getSource().sendSuccess(Component.literal(
                     "§7    (already " + label + ", no change)"), false);
@@ -108,18 +96,6 @@ public final class FeatureCommand {
             });
         }
 
-        // Audit (fail-open).
-        VenaryClient v = VenaryClient.get();
-        if (v != null) {
-            JsonObject p = new JsonObject();
-            p.addProperty("feature_key", key);
-            p.addProperty("enabled", enable);
-            p.addProperty("scope", "local");
-            String actorType = ctx.getSource().getEntity() == null ? "console" : "ingame";
-            String actorId   = actorType.equals("ingame")
-                    ? ctx.getSource().getTextName() : "console";
-            v.postAudit("feature_toggle", actorType, actorId, null, p);
-        }
         return 1;
     }
 
@@ -127,8 +103,9 @@ public final class FeatureCommand {
 
     private static int reload(CommandContext<CommandSourceStack> ctx) {
         ctx.getSource().sendSuccess(Component.literal(
-                "§a[VSU] Forcing /server-config fetch — check logs in a few seconds."), true);
-        ServerConfigClient.requestImmediateFetch();
+                "§a[VSU] Reloading local configuration."), true);
+        ModConfig.INSTANCE.reload();
+        FeatureRegistry.applyPanelGatesIfPresent(ModConfig.INSTANCE.panelGates());
         VonixServerUtilities.LOGGER.info("[VonixSU] /vonixsu feature reload requested by {}",
                 ctx.getSource().getTextName());
         return 1;
@@ -160,6 +137,6 @@ public final class FeatureCommand {
         int on = 0, off = 0;
         for (boolean v : snap.values()) { if (v) on++; else off++; }
         return "§7Features: §a" + on + " on§7 / §c" + off + " off§7 (config v" + reg.getConfigVersion()
-                + (reg.isHydratedFromBackend() ? "" : ", not yet synced") + ")";
+                + (reg.isHydratedFromBackend() ? "" : "") + ")";
     }
 }

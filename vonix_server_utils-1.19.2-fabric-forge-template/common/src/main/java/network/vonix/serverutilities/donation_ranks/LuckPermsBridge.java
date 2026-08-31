@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Probe-only public surface for the LuckPerms integration.
  *
  * <p><b>This class deliberately imports zero {@code net.luckperms.*} types.</b>
- * Why: when the JVM links this class (first reference from {@code RankSyncTask}
+ * Why: when the JVM links this class (first reference from command gates
  * etc.), it must be able to resolve every type appearing in its constant pool.
  * If a type from {@code net.luckperms.api.*} appears anywhere in the public
  * shape of this class and LP isn't on the classpath, linking throws
