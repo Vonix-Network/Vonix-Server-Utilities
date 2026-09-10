@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a SemVer-stable outside-mod SPI (`VonixPanels` / `VonixPanel`) with immutable player/server projections, capability reporting, permission-checked spawn/named-home teleport requests, and bounded lifecycle events. Companions are optional and not shipped in this repository.
 - Startup import is VSU-to-VSU retained `data.db` recovery only. VonixCore-to-VSU is no longer the current migration path.
 
+### Fixed
+- **LuckPerms wildcard permission resolution** — switched from `defaultContextualOptions()` to `nonContextual()` query options and added cache invalidation before permission checks. Wildcard nodes like `vsu.mod.*` and `vsu.admin.*` now resolve correctly regardless of server/world context or stale cached data. Applies to all five Minecraft version lanes.
+
 ### Compatibility
 - Local commands, permissions, homes, warps, back/death storage, inventory providers, and the SQLite schema are unchanged. Optional companions must compile against the public `network.vonix.serverutilities.api` package only.
 

@@ -226,14 +226,19 @@ final class LuckPermsBridgeImpl {
      * Synchronous LP permission lookup against the user's cached permission
      * data. Returns false when the user is not loaded; the caller catches
      * any thrown {@link LinkageError} / {@link RuntimeException}.
+     *
+     * <p>Uses non-contextual query options to ensure wildcard nodes (e.g.
+     * {@code vsu.mod.*}) resolve correctly regardless of server/world context.
      */
     static boolean hasPermission(UUID player, String node) {
         Optional<LuckPerms> lpOpt = api();
         if (lpOpt.isEmpty()) return false;
         User user = lpOpt.get().getUserManager().getUser(player);
         if (user == null) return false;
+        // Invalidate cached permission data to pick up recent group/permission changes
+        user.getCachedData().invalidate(net.luckperms.api.query.QueryOptions.nonContextual());
         return user.getCachedData()
-                .getPermissionData(net.luckperms.api.query.QueryOptions.defaultContextualOptions())
+                .getPermissionData(net.luckperms.api.query.QueryOptions.nonContextual())
                 .checkPermission(node)
                 .asBoolean();
     }
