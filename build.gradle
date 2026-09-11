@@ -18,7 +18,7 @@ configure(subprojects.findAll { architecturyCells.contains(it.name) }) {
     apply plugin: 'dev.architectury.loom'
     apply plugin: 'architectury-plugin'
     apply plugin: 'maven-publish'
-    base { archivesName = "$rootProject.archives_name-$project.name" }
+    base { archivesName = "vsu-${rootProject.minecraft_version}-$project.name" }
     repositories { }
     loom { silentMojangMappingsLicense() }
     dependencies {

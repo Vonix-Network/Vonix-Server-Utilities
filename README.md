@@ -47,7 +47,7 @@ Each established MC version lives in its own Architectury template directory (`v
 ## Install
 
 1. Install the matching Minecraft + loader (Forge / NeoForge / Fabric) for your server.
-2. Drop the matching `vonix_server_utilities-<loader>-<version>.jar` into your server's `mods/` folder.
+2. Drop the matching `vsu-<minecraft-version>-<loader>-<version>.jar` into your server's `mods/` folder.
 3. (Optional) Install **[LuckPerms](https://luckperms.net)** to use the full `vsu.*` permission tree. Without LuckPerms, VSU falls back to vanilla op levels — the mod still works, players just can't be granted individual commands without op.
 4. Start the server once to generate `config/vonix_server_utilities.properties` and `config/vonix_server_utilities/data.db`.
 
