@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-09-11
+
+### Fixed
+- Align the embedded VSU runtime version, Gradle metadata, and release documentation at `2.1.1` across all five Minecraft version lanes and all nine loader cells.
+- Correct the 1.20.1 `/vonixsu version` platform label so it reports `Architectury 1.20.1`.
+- Clarify feature-sync guidance: `/server-config` is an internal Venary HTTP path, while the in-game command is `/vonixsu feature reload` followed by `/vonixsu feature list`.
+
 ## [2.1.0] - 2026-09-10
 
 ### Added

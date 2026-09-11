@@ -30,7 +30,7 @@ public final class PanelSpiSmokeTest {
         require(death.occurredAtEpochMs().orElse(-1L) == 123L, "locationOnly records timestamp");
 
         PanelCapabilities caps = new PanelCapabilities(
-                true, true, true, true, true, true, true, true, "2.1.0", "1.21.1");
+                true, true, true, true, true, true, true, true, "2.1.1", "1.21.1");
         require(!caps.lastDeathIsHistory(), "lastDeathIsHistory is always false");
         require(caps.featureEnabled(PanelFeatureKeys.EVENTS), "events key maps to eventsEnabled");
         require(caps.featureEnabled("homes"), "homes key maps to homesEnabled");
@@ -50,9 +50,9 @@ public final class PanelSpiSmokeTest {
         require(unknown.hunger().equals(OptionalInt.empty()), "unknown player has empty hunger");
         require(unknown.lastSeenEpochMs().equals(OptionalLong.empty()), "unknown player has empty last-seen");
 
-        ServerSnapshot server = new ServerSnapshot("2.1.0", "1.21.1", 0, 20);
+        ServerSnapshot server = new ServerSnapshot("2.1.1", "1.21.1", 0, 20);
         require(server.maxPlayers() == 20, "server snapshot stores max players");
-        requireThrows(() -> new ServerSnapshot("2.1.0", "1.21.1", -1, 20), "negative onlinePlayers rejected");
+        requireThrows(() -> new ServerSnapshot("2.1.1", "1.21.1", -1, 20), "negative onlinePlayers rejected");
 
         PanelTeleportRequest spawn = PanelTeleportRequest.spawn(player);
         require(spawn.target() instanceof PanelTeleportTarget.Spawn, "spawn factory uses Spawn target");

@@ -603,7 +603,7 @@ public final class ModCommands {
         ctx.getSource().sendSuccess(
                 () -> Component.literal("§6[VSU] §fVersion: §e" + VonixServerUtilities.VERSION), false);
         ctx.getSource().sendSuccess(
-                () -> Component.literal("§7Platform: Architectury 1.21.1"), false);
+                () -> Component.literal("§7Platform: Architectury 1.20.1"), false);
         return 1;
     }
 

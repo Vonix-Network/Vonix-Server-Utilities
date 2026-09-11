@@ -12,29 +12,56 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PublicIdentityTest {
 
     @Test
-    void requestedCellsSharePublicVersionAndModId() throws IOException {
+    void supportedCellsSharePublicVersionAndModId() throws IOException {
         Path root = ImportBoundaryTest.repoRoot();
-        String common = Files.readString(root.resolve(
-                "vonix_server_utils-1.21.1-fabric-neoforgetemplate/common/src/main/java/network/vonix/serverutilities/VonixServerUtilities.java"));
-        String neo2612 = Files.readString(root.resolve(
-                "vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/VonixServerUtilities.java"));
-        assertTrue(common.contains("MOD_ID  = \"vonix_server_utilities\"")
-                || common.contains("MOD_ID = \"vonix_server_utilities\""));
-        assertTrue(neo2612.contains("MOD_ID  = \"vonix_server_utilities\"")
-                || neo2612.contains("MOD_ID = \"vonix_server_utilities\""));
-        assertTrue(common.contains("VERSION = \"2.0.0\""));
-        assertTrue(neo2612.contains("VERSION = \"2.0.0\""));
-        assertFalse(neo2612.contains("2.0.0-26.1.2.93-candidate"),
-                "public VERSION must stay 2.0.0; target suffix belongs on neither the artifact nor /vonixsu version");
+        String[] sources = {
+                "vonix_server_utils-1.18.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/VonixServerUtilities.java",
+                "vonix_server_utils-1.19.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/VonixServerUtilities.java",
+                "vonix_server_utils-1.20.1-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/VonixServerUtilities.java",
+                "vonix_server_utils-1.21.1-fabric-neoforgetemplate/common/src/main/java/network/vonix/serverutilities/VonixServerUtilities.java",
+                "vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/VonixServerUtilities.java"
+        };
+        for (String relative : sources) {
+            String source = Files.readString(root.resolve(relative));
+            assertTrue(source.contains("MOD_ID  = \"vonix_server_utilities\"")
+                    || source.contains("MOD_ID = \"vonix_server_utilities\""), relative);
+            assertTrue(source.contains("VERSION = \"2.1.1\""), relative);
+            assertFalse(source.contains("VERSION = \"2.0.0\""), relative);
+        }
+    }
+
+    @Test
+    void featureSyncTextUsesTheMinecraftCommandAndNotTheHttpPath() throws IOException {
+        Path root = ImportBoundaryTest.repoRoot();
+        String[] commands = {
+                "vonix_server_utils-1.18.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/command/FeatureCommand.java",
+                "vonix_server_utils-1.19.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/command/FeatureCommand.java",
+                "vonix_server_utils-1.20.1-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/command/FeatureCommand.java",
+                "vonix_server_utils-1.21.1-fabric-neoforgetemplate/common/src/main/java/network/vonix/serverutilities/command/FeatureCommand.java",
+                "vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/command/FeatureCommand.java"
+        };
+        for (String relative : commands) {
+            String source = Files.readString(root.resolve(relative));
+            assertTrue(source.contains("/vonixsu feature reload"), relative);
+            assertTrue(source.contains("Venary feature poll"), relative);
+            assertFalse(source.contains("/server-config poll"), relative);
+            assertFalse(source.contains("Forcing /server-config fetch"), relative);
+        }
     }
 
     @Test
     void versionCommandUsesTargetSpecificPlatformText() throws IOException {
         Path root = ImportBoundaryTest.repoRoot();
+        String commands201 = Files.readString(root.resolve(
+                "vonix_server_utils-1.20.1-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/command/ModCommands.java"));
         String commands1211 = Files.readString(root.resolve(
                 "vonix_server_utils-1.21.1-fabric-neoforgetemplate/common/src/main/java/network/vonix/serverutilities/command/ModCommands.java"));
         String commands2612 = Files.readString(root.resolve(
                 "vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/command/ModCommands.java"));
+        assertTrue(commands201.contains("Platform: Architectury 1.20.1"),
+                "1.20.1 must report its actual Minecraft target");
+        assertFalse(commands201.contains("Platform: Architectury 1.21.1"),
+                "1.20.1 must not report the 1.21.1 target");
         assertFalse(commands1211.contains("Platform: Architectury"),
                 "1.21.1 must not report Architectury as the public platform");
         assertTrue(commands1211.contains("platformDisplay()"),

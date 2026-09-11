@@ -196,6 +196,10 @@ See [MODERATION.md](MODERATION.md) for the full operator workflow, duration synt
 
 ---
 
+## Feature synchronization
+
+Feature flags are fetched internally from Venary; `/server-config` is not a Minecraft command. On a fresh install, enable Venary and configure its API key, then run `/vonixsu reload`, `/vonixsu feature reload`, and `/vonixsu feature list` to verify synchronization.
+
 ## Venary
 
 | Command | Usage | Node | Op fallback | Description |

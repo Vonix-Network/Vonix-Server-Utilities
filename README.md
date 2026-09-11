@@ -2,9 +2,9 @@
 
 A server-side essentials mod for Minecraft — homes, warps, kits, teleport, social, admin tooling, moderation, and Venary site integration — built on **Architectury** for **Forge, NeoForge, and Fabric** across the supported Minecraft target versions.
 
-**Current embedded mod version:** `2.0.0` (stable release) · **Common repository line:** `2.0.0` · See [CHANGELOG.md](CHANGELOG.md) · License: All Rights Reserved (Vonix Network)
+**Current embedded mod version:** `2.1.1` (stable release) · **Common repository line:** `2.1.1` · See [CHANGELOG.md](CHANGELOG.md) · License: All Rights Reserved (Vonix Network)
 
-The Minecraft **26.1.2 / NeoForge 26.1.2.93** lane is included in the `2.0.0` stable release under `vonix_server_utils-26.1.2-neoforge-template/`. Its artifact uses the same exact embedded release version as the other lanes.
+The Minecraft **26.1.2 / NeoForge 26.1.2.93** lane is included in the `2.1.1` stable release under `vonix_server_utils-26.1.2-neoforge-template/`. Its artifact uses the same exact embedded release version as the other lanes.
 
 ---
 
@@ -17,6 +17,18 @@ The Minecraft **26.1.2 / NeoForge 26.1.2.93** lane is included in the `2.0.0` st
 - **Venary site integration** — account linking (`/link`), periodic player sync, and automatic donation-rank → LuckPerms group sync.
 
 ---
+
+## 2.1.1 feature-sync operator guidance
+
+Feature configuration is fetched by VSU internally from Venary. It is not exposed as a root Minecraft command. After enabling Venary and configuring its API key, use:
+
+```text
+/vonixsu reload
+/vonixsu feature reload
+/vonixsu feature list
+```
+
+`/vonixsu reload` rereads local configuration; `/vonixsu feature reload` requests the Venary feature sync; `/vonixsu feature list` displays the result.
 
 ## Supported versions
 
@@ -62,7 +74,7 @@ Full command reference: **[docs/COMMANDS.md](docs/COMMANDS.md)**.
 - **[docs/COMMANDS.md](docs/COMMANDS.md)** — every command, usage, permission node, op-fallback, example.
 - **[docs/PERMISSIONS.md](docs/PERMISSIONS.md)** — full `vsu.*` permission tree and LuckPerms group recipes.
 - **[docs/MODERATION.md](docs/MODERATION.md)** — duration syntax, escalation, audit, bypass nodes, restoring a wrongful ban.
-- **[docs/COMMON-V2-REPOSITORY.md](docs/COMMON-V2-REPOSITORY.md)** — the `2.0.0` five-lane repository layout, release boundary, and build expectations.
+- **[docs/COMMON-V2-REPOSITORY.md](docs/COMMON-V2-REPOSITORY.md)** — the `2.1.1` five-lane repository layout, release boundary, and build expectations.
 - **[docs/GAP-ANALYSIS-v1.6.0.md](docs/GAP-ANALYSIS-v1.6.0.md)** — v1.6.0 scope vs. industry essentials baselines.
 - **[docs/V1.6.0-SPEC.md](docs/V1.6.0-SPEC.md)** — authoritative implementation spec for the v1.6.0 release.
 - **[CHANGELOG.md](CHANGELOG.md)** — release history (Keep-a-Changelog format).
@@ -99,7 +111,7 @@ tpa_timeout_seconds=120
 death_back_delay_seconds=0
 ```
 
-Subsystems can be toggled at runtime with `/feature enable|disable|list|reload|status <key>` — every feature category is gated by a `FeatureGate` key, so admins can disable moderation, Venary, or any feature group without uninstalling the mod.
+Subsystems can be toggled at runtime with `/vonixsu feature enable|disable|list|reload|status <key>` — every feature category is gated by a `FeatureGate` key, so admins can disable moderation, Venary, or any feature group without uninstalling the mod.
 
 Database: `config/vonix_server_utilities/data.db` (SQLite, WAL mode). VonixCore databases are auto-migrated on first launch.
 

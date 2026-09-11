@@ -5,7 +5,7 @@
 - **Repository:** `Vonix-Network/Vonix-Server-Utilities-Architechtury`
 - **Canonical checkout for this candidate:** `/root/work/mod-v2-common-migration-20260825/candidates-r14/vsu`
 - **Default branch:** `master`
-- **Project release line:** `2.0.0`
+- **Project release line:** `2.1.1`
 - **License posture:** All Rights Reserved (Vonix Network)
 - **Project role:** server-side Minecraft essentials, moderation, administration, and Venary integration
 
@@ -37,8 +37,8 @@ The first four Architectury lanes have `common/`, `fabric/`, and either `forge/`
 
 ## Version contract
 
-- Every VSU lane uses the same embedded release version: **`2.0.0`**.
-- The release tag and GitHub release title are **`v2.0.0`**.
+- Every VSU lane uses the same embedded release version: **`2.1.1`**.
+- The release tag and GitHub release title are **`v2.1.1`**.
 - Do not add Minecraft or loader suffixes to the embedded public version. Target/loader identity belongs in the artifact filename and release matrix.
 - Historical versions such as `1.7.1` and older tags remain historical. Never rewrite or force-update immutable tags.
 - Keep `gradle.properties`, public identity constants, generated `fabric.mod.json`/NeoForge metadata, tests, README, and changelog aligned.
@@ -48,7 +48,7 @@ The first four Architectury lanes have `common/`, `fabric/`, and either `forge/`
 The authoritative release build is `.github/workflows/release.yml`.
 
 - A `workflow_dispatch` run is **build-only** because the release job is guarded to tag refs.
-- A push of `v2.0.0` runs the complete nine-lane matrix and publishes the GitHub release only after all matrix jobs pass.
+- A push of `v2.1.1` runs the complete nine-lane matrix and publishes the GitHub release only after all matrix jobs pass.
 - Older Loom lanes run Gradle under Java 21 even when their Java source target is 17. The 1.21.1 lane uses Java 21/Gradle 8.14. The 26.1.2 lane uses Java 25/Gradle 9.2.0.
 - CI provisions Gradle explicitly with `gradle/actions/setup-gradle`; do not assume a checked-in `gradle-wrapper.jar` is present.
 - The release job must select exactly one non-source/non-dev JAR per supported lane and write `SHA256SUMS`.
@@ -101,10 +101,10 @@ Before calling a candidate release-ready:
 ## Release procedure
 
 1. Inspect remote branch, tags, and releases.
-2. Confirm the final source commit and `2.0.0` metadata.
+2. Confirm the final source commit and `2.1.1` metadata.
 3. Push the exact default-branch commit without force.
 4. Run build-only CI and require all nine cells to pass.
-5. Push only the exact `v2.0.0` tag.
+5. Push only the exact `v2.1.1` tag.
 6. Verify the tag-triggered release, nine assets, release notes, and `SHA256SUMS` through GitHub read-back.
 7. Independently inspect the remote commit/tree and release assets.
 8. Record any unavailable runtime evidence; do not claim activation.
@@ -125,7 +125,7 @@ Stop and report instead of guessing on:
 
 - [ ] Correct repository and default branch verified.
 - [ ] All five Minecraft version directories retained in this repository.
-- [ ] All nine VSU loader cells use version `2.0.0`.
+- [ ] All nine VSU loader cells use version `2.1.1`.
 - [ ] Root README, docs, changelog, and this AGENTS file agree.
 - [ ] CI build-only matrix passes 9/9.
 - [ ] Tag-triggered release assets and hashes read back remotely.

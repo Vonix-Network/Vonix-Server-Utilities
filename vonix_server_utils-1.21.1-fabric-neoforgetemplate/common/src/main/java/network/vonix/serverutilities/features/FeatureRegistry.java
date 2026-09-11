@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * whether {@code vsu_homes}, {@code vsu_warps}, or {@code vsu_kit_cooldowns}
  * contains any rows. If so, the corresponding feature is auto-enabled in
  * memory so a freshly-upgraded server isn't accidentally locked out of its
- * own data while we wait for the first /server-config poll to land. The
+ * own data while we wait for the first Venary feature poll to land. The
  * auto-enabled flags are <i>local-only</i> — the next successful poll
  * overwrites them with the canonical value from the dashboard.
  *

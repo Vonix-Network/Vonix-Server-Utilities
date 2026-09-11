@@ -35,7 +35,7 @@ import java.util.TreeMap;
  * token, so we cannot call it directly. Instead /vonixsu feature
  * enable/disable updates the LOCAL {@link FeatureRegistry} immediately AND
  * posts an audit row (event_type=feature_toggle). On the very next
- * /server-config poll the canonical dashboard state will sync back and
+ * Venary feature poll the canonical dashboard state will sync back and
  * <b>overwrite</b> the local toggle. So in-game toggles are best thought of
  * as "until the next poll" — for permanent changes operators must use the
  * admin dashboard.
@@ -74,7 +74,7 @@ public final class FeatureCommand {
                 "§6[VSU] §fFeatures §7(config v" + reg.getConfigVersion()
                         + (reg.isHydratedFromBackend() ? "" : ", §enot yet synced") + "§7):"), false);
         if (snap.isEmpty()) {
-            ctx.getSource().sendSuccess(() -> Component.literal("  §7(none known yet — waiting for first /server-config)"), false);
+            ctx.getSource().sendSuccess(() -> Component.literal("  §7(none known yet — enable Venary, then run /vonixsu feature reload)"), false);
             return 1;
         }
         for (Map.Entry<String, Boolean> e : snap.entrySet()) {
@@ -92,7 +92,7 @@ public final class FeatureCommand {
         String label = enable ? "enabled" : "disabled";
 
         ctx.getSource().sendSuccess(() -> Component.literal(
-                "§a[VSU] Feature §e" + key + "§a " + label + " §7(local-only — will be overwritten by next /server-config poll)."), true);
+                "§a[VSU] Feature §e" + key + "§a " + label + " §7(local-only — will be overwritten by next Venary feature poll)."), true);
         if (!changed) {
             ctx.getSource().sendSuccess(() -> Component.literal(
                     "§7    (already " + label + ", no change)"), false);
@@ -127,7 +127,7 @@ public final class FeatureCommand {
 
     private static int reload(CommandContext<CommandSourceStack> ctx) {
         ctx.getSource().sendSuccess(() -> Component.literal(
-                "§a[VSU] Forcing /server-config fetch — check logs in a few seconds."), true);
+                "§a[VSU] Venary feature sync requested — run /vonixsu feature list to verify."), true);
         ServerConfigClient.requestImmediateFetch();
         VonixServerUtilities.LOGGER.info("[VonixSU] /vonixsu feature reload requested by {}",
                 ctx.getSource().getTextName());
