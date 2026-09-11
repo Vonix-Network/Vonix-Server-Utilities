@@ -1,4 +1,4 @@
-﻿{
+{
   "required": true,
   "package": "network.vonix.serverutilities.mixin",
   "compatibilityLevel": "JAVA_17",
@@ -11,4 +11,3 @@
     "defaultRequire": 1
   }
 }
-

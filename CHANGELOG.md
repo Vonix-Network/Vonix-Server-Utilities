@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Align the embedded VSU runtime version, Gradle metadata, and release documentation at `2.1.1` across all five Minecraft version lanes and all nine loader cells.
 - Correct the 1.20.1 `/vonixsu version` platform label so it reports `Architectury 1.20.1`.
 - Clarify feature-sync guidance: `/server-config` is an internal Venary HTTP path, while the in-game command is `/vonixsu feature reload` followed by `/vonixsu feature list`.
+- Restore 1.18.2 / 1.19.2 / 1.20.1 server-start lifecycle so kits load, teleport and utility caches hydrate, crate schema and pending-claim recovery run, and the Venary client shuts down — matching the 1.21.1 / 26.1.2 sequence.
+- Strip a UTF-8 BOM from 1.19.2 and 1.20.1 Fabric `fabric.mod.json` and mixin JSON so Fabric Loader can parse the metadata.
+- Replace leftover Architectury example placeholders in 1.18.2 Fabric/Forge metadata (`Me!`, `CC0-1.0`, `Insert License Here`) with the Vonix public identity.
+- Put sqlite-jdbc on the 1.20.1 Fabric Loom `runServer` classpath so server-start hydration can be exercised locally (production Fabric/Forge JARs already nest sqlite via JarInJar).
 
 ## [2.1.0] - 2026-09-10
 

@@ -40,8 +40,11 @@ public final class EventHandler {
             TeleportManager.getInstance().hydrateFromDb(); UtilityCommands.hydrateFromDb();
             var r = network.vonix.serverutilities.crates.CrateRepository.getInstance();
             r.ensureSchema(VonixServerUtilities.getInstance().getDatabase().getConnection());
-            r.createCrate("playtime", "playtime"); r.createCrate("event", "event"); r.recoverPendingClaims();
+            r.createCrate("playtime", "playtime"); r.createCrate("event", "event");
+            int recovered = r.recoverPendingClaims();
+            if (recovered > 0) VonixServerUtilities.LOGGER.warn("[VSU] Refunded {} pending crate claims after startup.", recovered);
         } catch (Exception e) { VonixServerUtilities.LOGGER.error("[VSU] startup initialization failed", e); } });
+        VonixServerUtilities.dbAsync(() -> network.vonix.serverutilities.kits.KitManager.getInstance().loadFromJson(s));
         VenaryClient.init(ModConfig.INSTANCE.getVenaryConfig()); PlayerSyncTask.register(); CratePlaytimeTask.register();
         FeatureRegistry.getInstance(); ServerConfigClient.startPolling();
     }
@@ -49,7 +52,7 @@ public final class EventHandler {
     private static void serverStopping(MinecraftServer s) { ModerationBootstrap.serverStopping(s); }
     private static void serverStopped(MinecraftServer s) {
         TeleportManager.getInstance().clear(); AdminManager.getInstance().clear(); PlayerSyncTask.clear(); CratePlaytimeTask.clear(); LinkCommands.clearCooldowns();
-        VenaryClient v = VenaryClient.get(); if (v != null) v.shutdown(); VonixServerUtilities.getInstance().shutdown(); VonixServerUtilities.getInstance().getDatabase().close();
+        VenaryClient venary = VenaryClient.get(); if (venary != null) venary.shutdown(); VonixServerUtilities.getInstance().shutdown(); VonixServerUtilities.getInstance().getDatabase().close();
     }
     private static void serverTick(MinecraftServer s) { PlayerSyncTask.onServerTick(s); CratePlaytimeTask.onServerTick(s); ServerConfigClient.onTick(s); }
     private static void playerJoin(ServerPlayer p) { UtilityCommands.onPlayerJoin(p); PlayerSyncTask.onPlayerJoin(p); RankSyncTask.onJoin(p); }

@@ -45,6 +45,8 @@ dependencies {
     // the native binding. include + compileOnly mirrors the Forge/NeoForge JiJ shape.
     include 'org.xerial:sqlite-jdbc:3.45.1.0'
     compileOnly 'org.xerial:sqlite-jdbc:3.45.1.0'
+    // Loom runServer does not load fabric.mod.json nested jars; production still ships via include.
+    modLocalRuntime 'org.xerial:sqlite-jdbc:3.45.1.0'
 
     modCompileOnly "dev.emi:trinkets:3.7.1"
 }

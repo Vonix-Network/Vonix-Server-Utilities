@@ -71,23 +71,22 @@ class LifecycleParityTest {
     @Test
     void requestedCellsShareEventHandlerLifecycleSequence() throws IOException {
         Path root = ImportBoundaryTest.repoRoot();
-        String cell1211 = Files.readString(root.resolve(
-                "vonix_server_utils-1.21.1-fabric-neoforgetemplate/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java"));
-        String cell2612 = Files.readString(root.resolve(
-                "vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/listener/EventHandler.java"));
-
-        assertContainsAll(cell1211, "1.21.1 EventHandler", STARTING);
-        assertContainsAll(cell2612, "26.1.2 EventHandler", STARTING);
-        assertContainsAll(cell1211, "1.21.1 EventHandler", STARTED);
-        assertContainsAll(cell2612, "26.1.2 EventHandler", STARTED);
-        assertContainsAll(cell1211, "1.21.1 EventHandler", STOPPING);
-        assertContainsAll(cell2612, "26.1.2 EventHandler", STOPPING);
-        assertContainsAll(cell1211, "1.21.1 EventHandler", STOPPED);
-        assertContainsAll(cell2612, "26.1.2 EventHandler", STOPPED);
-        assertContainsAll(cell1211, "1.21.1 EventHandler", COMMANDS);
-        assertContainsAll(cell2612, "26.1.2 EventHandler", COMMANDS);
-        assertContainsAll(cell1211, "1.21.1 EventHandler", TICK);
-        assertContainsAll(cell2612, "26.1.2 EventHandler", TICK);
+        String[][] cells = {
+                {"1.18.2 EventHandler", "vonix_server_utils-1.18.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java"},
+                {"1.19.2 EventHandler", "vonix_server_utils-1.19.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java"},
+                {"1.20.1 EventHandler", "vonix_server_utils-1.20.1-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java"},
+                {"1.21.1 EventHandler", "vonix_server_utils-1.21.1-fabric-neoforgetemplate/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java"},
+                {"26.1.2 EventHandler", "vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/listener/EventHandler.java"}
+        };
+        for (String[] cell : cells) {
+            String source = Files.readString(root.resolve(cell[1]));
+            assertContainsAll(source, cell[0], STARTING);
+            assertContainsAll(source, cell[0], STARTED);
+            assertContainsAll(source, cell[0], STOPPING);
+            assertContainsAll(source, cell[0], STOPPED);
+            assertContainsAll(source, cell[0], COMMANDS);
+            assertContainsAll(source, cell[0], TICK);
+        }
     }
 
     @Test

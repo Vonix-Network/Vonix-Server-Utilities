@@ -1,4 +1,4 @@
-﻿{
+{
   "schemaVersion": 1,
   "id": "vonix_server_utilities",
   "version": "${version}",
@@ -31,4 +31,3 @@
     "luckperms": "*"
   }
 }
-

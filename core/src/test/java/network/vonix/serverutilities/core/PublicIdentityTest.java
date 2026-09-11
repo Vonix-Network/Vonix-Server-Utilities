@@ -93,4 +93,47 @@ class PublicIdentityTest {
         assertFalse(neo1211.contains("modId = \"architectury\""));
         assertFalse(neo2612.contains("architectury"));
     }
+
+    @Test
+    void supportedLoaderMetadataIsBomFreeAndCarriesVonixIdentity() throws IOException {
+        Path root = ImportBoundaryTest.repoRoot();
+        String[] metadata = {
+                "vonix_server_utils-1.18.2-fabric-forge-template/fabric/src/main/resources/fabric.mod.json",
+                "vonix_server_utils-1.18.2-fabric-forge-template/forge/src/main/resources/META-INF/mods.toml",
+                "vonix_server_utils-1.19.2-fabric-forge-template/fabric/src/main/resources/fabric.mod.json",
+                "vonix_server_utils-1.19.2-fabric-forge-template/forge/src/main/resources/META-INF/mods.toml",
+                "vonix_server_utils-1.20.1-fabric-forge-template/fabric/src/main/resources/fabric.mod.json",
+                "vonix_server_utils-1.20.1-fabric-forge-template/forge/src/main/resources/META-INF/mods.toml",
+                "vonix_server_utils-1.20.1-fabric-forge-template/common/src/main/resources/vonix_server_utilities.mixins.json",
+                "vonix_server_utils-1.19.2-fabric-forge-template/common/src/main/resources/vonix_server_utilities.mixins.json",
+                "vonix_server_utils-1.21.1-fabric-neoforgetemplate/fabric/src/main/resources/fabric.mod.json",
+                "vonix_server_utils-1.21.1-fabric-neoforgetemplate/neoforge/src/main/resources/META-INF/neoforge.mods.toml",
+                "vonix_server_utils-26.1.2-neoforge-template/src/main/resources/META-INF/neoforge.mods.toml"
+        };
+        for (String relative : metadata) {
+            Path path = root.resolve(relative);
+            byte[] raw = Files.readAllBytes(path);
+            assertFalse(raw.length >= 3 && raw[0] == (byte) 0xEF && raw[1] == (byte) 0xBB && raw[2] == (byte) 0xBF,
+                    relative + " must not start with a UTF-8 BOM");
+            String text = Files.readString(path);
+            if (relative.endsWith("mixins.json")) {
+                continue;
+            }
+            assertTrue(text.contains("vonix_server_utilities"), relative);
+            assertTrue(text.contains("${version}") || text.contains("version = \"${version}\"")
+                    || text.contains("\"version\": \"${version}\""), relative);
+            assertFalse(text.contains("Me!"), relative + " must not keep Architectury example authors");
+            assertFalse(text.contains("Insert License Here"), relative);
+            assertFalse(text.contains("fabric-example-mod"), relative);
+            assertFalse(text.contains("CC0-1.0"), relative);
+        }
+        String fabric201 = Files.readString(root.resolve(
+                "vonix_server_utils-1.20.1-fabric-forge-template/fabric/src/main/resources/fabric.mod.json"));
+        assertTrue(fabric201.contains("\"environment\": \"server\""));
+        assertTrue(fabric201.contains("\"minecraft\": \"~1.20.1\""));
+        String forge201 = Files.readString(root.resolve(
+                "vonix_server_utils-1.20.1-fabric-forge-template/forge/src/main/resources/META-INF/mods.toml"));
+        assertTrue(forge201.contains("modId = \"vonix_server_utilities\""));
+        assertTrue(forge201.contains("versionRange = \"[1.20.1,1.21)\""));
+    }
 }
