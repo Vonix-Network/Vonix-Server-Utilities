@@ -8,7 +8,7 @@ version = "${version}"
 displayName = "Vonix Server Utilities"
 authors = "Vonix Network"
 description = '''
-Full-featured server utility mod: homes, warps, kits, TPA, teleport, admin tools, world commands, moderation, and Venary integration.
+Full-featured server utility mod: homes, warps, kits, TPA, teleport, admin tools, world commands, and moderation.
 '''
 
 [[dependencies.vonix_server_utilities]]

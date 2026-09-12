@@ -1,6 +1,6 @@
 # VSU Command Reference
 
-Alphabetical reference for every command shipped with Vonix Server Utilities v1.6.0.
+Alphabetical reference for every command shipped with Vonix Server Utilities v2.2.0.
 
 Every command goes through `PermissionGate`: if LuckPerms is installed the listed **node** is checked; if not, the listed **op level** is required. Console always passes.
 
@@ -12,7 +12,6 @@ Every command goes through `PermissionGate`: if LuckPerms is installed the liste
 - [Admin](#admin) — `/heal`, `/fly`, `/god`, `/vanish`, `/gm`, `/vonixsu`
 - [Moderation](#moderation) — `/ban`, `/mute`, `/kick`, `/warn`, `/banlist`
 - [World](#world) — `/weather`, `/time`, `/day`, `/night`, `/lightning`, `/smite`
-- [Venary](#venary) — `/link`, `/unlink`
 
 ---
 
@@ -126,15 +125,14 @@ Kits are loaded from `config/vonix_server_utilities/kits.json`. Each entry may s
 | `/god` | `/god [player]` | `vsu.admin.god` | 2 | Toggle invulnerability. |
 | `/heal` | `/heal [player]` | `vsu.admin.heal` | 2 | Restore full health. |
 | `/vanish` | `/vanish [player]` | `vsu.admin.vanish` | 2 | Toggle invisibility from other players. |
-| `/vonixsu` | `/vonixsu <version\|status\|reload\|feature ...>` | `vsu.admin.manage` | 3 | VSU root command — info and mod management. |
-| `/vonixsu feature` | `/vonixsu feature <list\|enable\|disable\|reload\|status> [feature]` | `vsu.admin.manage` | 3 | Manage feature flags at runtime. |
+| `/vonixsu` | `/vonixsu <version\|status\|reload>` | `vsu.admin.manage` | 3 | VSU root command — info and local mod management. |
 
 **Example**
 
 ```
 /heal Steve
 /gm c
-/vonixsu feature disable homes
+/vonixsu reload
 ```
 
 ---
@@ -193,19 +191,6 @@ See [MODERATION.md](MODERATION.md) for the full operator workflow, duration synt
 /time set day
 /smite Steve
 ```
-
----
-
-## Feature synchronization
-
-Feature flags are fetched internally from Venary; `/server-config` is not a Minecraft command. On a fresh install, enable Venary and configure its API key, then run `/vonixsu reload`, `/vonixsu feature reload`, and `/vonixsu feature list` to verify synchronization.
-
-## Venary
-
-| Command | Usage | Node | Op fallback | Description |
-|---|---|---|---|---|
-| `/link` | `/link` | `vsu.command.link` | 0 | Begin the link flow to associate your in-game account with Venary. |
-| `/unlink` | `/unlink` | `vsu.command.link` | 0 | Disconnect your Venary link. |
 
 ---
 

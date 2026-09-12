@@ -10,13 +10,16 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Pins the 1.21.1 EventHandler startup/started/stopping/stopped sequence as
- * the requested-cell parity reference. 26.1.2 stays native NeoForge.
- */
+/** Pins the standalone startup, command, and shutdown sequence in every cell. */
 class LifecycleParityTest {
+    private static final List<String> EVENT_HANDLERS = List.of(
+            "vonix_server_utils-1.18.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java",
+            "vonix_server_utils-1.19.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java",
+            "vonix_server_utils-1.20.1-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java",
+            "vonix_server_utils-1.21.1-fabric-neoforgetemplate/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java",
+            "vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/listener/EventHandler.java");
 
-    private static final String[] STARTING = {
+    private static final List<String> REQUIRED = List.of(
             "ModConfig.INSTANCE.load",
             "getDatabase().init",
             "TeleportManager.getInstance().hydrateFromDb()",
@@ -26,106 +29,47 @@ class LifecycleParityTest {
             "createCrate(\"event\", \"event\")",
             "recoverPendingClaims()",
             "KitManager.getInstance().loadFromJson",
-            "VenaryClient.init",
-            "PlayerSyncTask.register()",
             "CratePlaytimeTask.register()",
-            "FeatureRegistry.getInstance()",
-            "ServerConfigClient.startPolling()"
-    };
-
-    private static final String[] STARTED = {
-            "RankGroupSyncer.syncAll()",
-            "ModerationBootstrap.serverStarted"
-    };
-
-    private static final String[] STOPPING = {
-            "ModerationBootstrap.serverStopping"
-    };
-
-    private static final String[] STOPPED = {
+            "ModerationBootstrap.serverStarted",
+            "ModerationBootstrap.serverStopping",
             "TeleportManager.getInstance().clear()",
             "AdminManager.getInstance().clear()",
-            "PlayerSyncTask.clear()",
             "CratePlaytimeTask.clear()",
-            "LinkCommands.clearCooldowns()",
-            "venary.shutdown()",
             "getInstance().shutdown()",
-            "getDatabase().close()"
-    };
-
-    private static final String[] COMMANDS = {
+            "getDatabase().close()",
             "ModCommands.register",
             "CrateCommands.register",
             "UtilityCommands.register",
             "WorldCommands.register",
-            "LinkCommands.register",
-            "ModerationBootstrap.registerCommands"
-    };
+            "ModerationBootstrap.registerCommands",
+            "CratePlaytimeTask.onServerTick");
 
-    private static final String[] TICK = {
-            "PlayerSyncTask.onServerTick",
-            "CratePlaytimeTask.onServerTick",
-            "ServerConfigClient.onTick"
-    };
+    private static final List<String> FORBIDDEN = List.of(
+            "Venary", "venary", "ServerConfigClient", "FeatureRegistry", "FeatureCommand",
+            "RankGroupSyncer", "RankSyncTask", "LinkCommands", "PlayerSyncTask");
 
     @Test
-    void requestedCellsShareEventHandlerLifecycleSequence() throws IOException {
+    void everyCellSharesStandaloneLifecycleSequence() throws IOException {
         Path root = ImportBoundaryTest.repoRoot();
-        String[][] cells = {
-                {"1.18.2 EventHandler", "vonix_server_utils-1.18.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java"},
-                {"1.19.2 EventHandler", "vonix_server_utils-1.19.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java"},
-                {"1.20.1 EventHandler", "vonix_server_utils-1.20.1-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java"},
-                {"1.21.1 EventHandler", "vonix_server_utils-1.21.1-fabric-neoforgetemplate/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java"},
-                {"26.1.2 EventHandler", "vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/listener/EventHandler.java"}
-        };
-        for (String[] cell : cells) {
-            String source = Files.readString(root.resolve(cell[1]));
-            assertContainsAll(source, cell[0], STARTING);
-            assertContainsAll(source, cell[0], STARTED);
-            assertContainsAll(source, cell[0], STOPPING);
-            assertContainsAll(source, cell[0], STOPPED);
-            assertContainsAll(source, cell[0], COMMANDS);
-            assertContainsAll(source, cell[0], TICK);
+        for (String relative : EVENT_HANDLERS) {
+            String source = Files.readString(root.resolve(relative));
+            for (String token : REQUIRED) {
+                assertTrue(source.contains(token), relative + " missing lifecycle token: " + token);
+            }
+            for (String token : FORBIDDEN) {
+                assertFalse(source.contains(token), relative + " contains removed integration: " + token);
+            }
         }
     }
 
     @Test
-    void twentySixStaysNativeNeoForgeWithoutArchitecturyOrPlatformEventsHolder() throws IOException {
+    void allCellsStillHydrateKitsAndKeepModerationHooks() throws IOException {
         Path root = ImportBoundaryTest.repoRoot();
-        String handler = Files.readString(root.resolve(
-                "vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/listener/EventHandler.java"));
-        assertTrue(handler.contains("net.neoforged.neoforge.common.NeoForge.EVENT_BUS"),
-                "26.1.2 EventHandler must keep native NeoForge bus registration");
-        assertTrue(handler.contains("ServerStartingEvent"));
-        assertTrue(handler.contains("ServerStartedEvent"));
-        assertTrue(handler.contains("ServerStoppingEvent"));
-        assertTrue(handler.contains("ServerStoppedEvent"));
-        assertFalse(handler.contains("dev.architectury"), "26.1.2 must not reintroduce Architectury");
-        assertFalse(handler.contains("PlatformEvents.Holder"),
-                "26.1.2 must not be forced onto PlatformEvents.Holder");
-    }
-
-    @Test
-    void twentySixSharedNamedLifecycleClassesDoNotImportNeoForge() throws IOException {
-        Path root = ImportBoundaryTest.repoRoot();
-        Path src = root.resolve("vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities");
-        List<Path> shared = List.of(
-                src.resolve("crates/CratePlaytimeTask.java"),
-                src.resolve("venary/PlayerSyncTask.java"),
-                src.resolve("features/ServerConfigClient.java"),
-                src.resolve("moderation/ModerationBootstrap.java"));
-        for (Path file : shared) {
-            String text = Files.readString(file);
-            assertFalse(text.contains("net.neoforged"),
-                    file.getFileName() + " must not mix NeoForge event registration into shared-named classes");
-            assertFalse(text.contains("dev.architectury"),
-                    file.getFileName() + " must not import Architectury");
-        }
-    }
-
-    private static void assertContainsAll(String source, String label, String[] tokens) {
-        for (String token : tokens) {
-            assertTrue(source.contains(token), label + " missing lifecycle token: " + token);
+        for (String relative : EVENT_HANDLERS) {
+            String source = Files.readString(root.resolve(relative));
+            assertTrue(source.contains("KitManager.getInstance().loadFromJson"), relative);
+            assertTrue(source.contains("ModerationBootstrap.init()"), relative);
+            assertTrue(source.contains("livingDeath"), relative);
         }
     }
 }

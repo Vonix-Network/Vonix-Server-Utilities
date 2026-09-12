@@ -20,7 +20,6 @@ import network.vonix.serverutilities.features.PermissionGate;
 import network.vonix.serverutilities.homes.HomeManager;
 import network.vonix.serverutilities.kits.KitManager;
 import network.vonix.serverutilities.teleport.TeleportManager;
-import network.vonix.serverutilities.venary.LinkCommands;
 import network.vonix.serverutilities.warps.WarpManager;
 
 import java.util.UUID;
@@ -591,7 +590,6 @@ public final class ModCommands {
                 .then(Commands.literal("status").executes(ModCommands::showStatus))
                 .then(Commands.literal("reload")
                         .executes(ModCommands::reloadConfig))
-                .then(FeatureCommand.tree())
                 .executes(ModCommands::showHelp));
     }
 
@@ -605,19 +603,14 @@ public final class ModCommands {
         int players = ctx.getSource().getServer().getPlayerList().getPlayerCount();
         int max     = ctx.getSource().getServer().getMaxPlayers();
         ctx.getSource().sendSuccess(new TextComponent("§6[VSU] §fStatus: §aOnline §7(" + players + "/" + max + ")"), false);
-        ctx.getSource().sendSuccess(new TextComponent("§7Modules: homes, warps, kits, TPA, back, admin, world, venary"), false);
-        // Venary integration status (masked secrets).
-        LinkCommands.appendStatusLines(ctx.getSource());
-        // Feature flag summary.
-        ctx.getSource().sendSuccess(new TextComponent(FeatureCommand.summaryLine()), false);
+        ctx.getSource().sendSuccess(new TextComponent("§7Modules: homes, warps, kits, TPA, back, admin, world"), false);
+        // Standalone VSU has no remote feature registry; feature keys are compatibility labels only.
         return 1;
     }
 
     private static int reloadConfig(CommandContext<CommandSourceStack> ctx) {
         try {
             boolean ok = ModConfig.INSTANCE.reload();
-            // Re-init the Venary client with the freshly-loaded settings.
-            network.vonix.serverutilities.venary.VenaryClient.init(ModConfig.INSTANCE.getVenaryConfig());
             // Reload kits.json so operators can hot-edit kit definitions too.
             try { KitManager.getInstance().reloadFromJson(ctx.getSource().getServer()); } catch (Throwable ignore) {}
             if (ok) ctx.getSource().sendSuccess(new TextComponent("§a[VSU] Configuration reloaded."), true);
@@ -636,7 +629,6 @@ public final class ModCommands {
         ctx.getSource().sendSuccess(new TextComponent("§e/vonixsu version §7— show version"), false);
         ctx.getSource().sendSuccess(new TextComponent("§e/vonixsu status  §7— show server status"), false);
         ctx.getSource().sendSuccess(new TextComponent("§e/vonixsu reload  §7— reload info"), false);
-        ctx.getSource().sendSuccess(new TextComponent("§e/vonixsu feature [list|enable|disable|reload|status] §7— manage feature flags"), false);
         return 1;
     }
 }

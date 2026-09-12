@@ -5,96 +5,74 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Pins the in-game feature-sync command surface and the 1.20.1 / shared
- * EventHandler poller wiring. {@code /server-config} is a Venary HTTP path.
- */
+/** Standalone-boundary contract for the nine packaged VSU cells. */
 class FeatureSyncContractTest {
+    private static final List<String> MAIN_ROOTS = List.of(
+            "vonix_server_utils-1.18.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities",
+            "vonix_server_utils-1.19.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities",
+            "vonix_server_utils-1.20.1-fabric-forge-template/common/src/main/java/network/vonix/serverutilities",
+            "vonix_server_utils-1.21.1-fabric-neoforgetemplate/common/src/main/java/network/vonix/serverutilities",
+            "vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities");
 
-    private static final String[] FEATURE_COMMANDS = {
-            "vonix_server_utils-1.18.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/command/FeatureCommand.java",
-            "vonix_server_utils-1.19.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/command/FeatureCommand.java",
-            "vonix_server_utils-1.20.1-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/command/FeatureCommand.java",
-            "vonix_server_utils-1.21.1-fabric-neoforgetemplate/common/src/main/java/network/vonix/serverutilities/command/FeatureCommand.java",
-            "vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/command/FeatureCommand.java"
-    };
-
-    private static final String[] MOD_COMMANDS = {
-            "vonix_server_utils-1.18.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/command/ModCommands.java",
-            "vonix_server_utils-1.19.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/command/ModCommands.java",
-            "vonix_server_utils-1.20.1-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/command/ModCommands.java",
-            "vonix_server_utils-1.21.1-fabric-neoforgetemplate/common/src/main/java/network/vonix/serverutilities/command/ModCommands.java",
-            "vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/command/ModCommands.java"
-    };
-
-    private static final String[] EVENT_HANDLERS = {
-            "vonix_server_utils-1.18.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java",
-            "vonix_server_utils-1.19.2-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java",
-            "vonix_server_utils-1.20.1-fabric-forge-template/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java",
-            "vonix_server_utils-1.21.1-fabric-neoforgetemplate/common/src/main/java/network/vonix/serverutilities/listener/EventHandler.java",
-            "vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/listener/EventHandler.java"
-    };
+    private static final List<String> FORBIDDEN_MARKERS = List.of(
+            "Venary", "venary", "ServerConfigClient", "FeatureRegistry", "FeatureCommand",
+            "RankGroupSyncer", "RankSyncTask", "LinkCommands", "PlayerSyncTask",
+            "VonixPanel", "PanelCapabilities", "PanelTeleport", "server-config",
+            "api.vonix", "java.net.http", "HttpClient");
 
     @Test
-    void featureCommandTreeExposesListReloadEnableDisableAndStatus() throws IOException {
+    void everyCellHasNoRemoteOrCompanionControlSource() throws IOException {
         Path root = ImportBoundaryTest.repoRoot();
-        for (String relative : FEATURE_COMMANDS) {
-            String source = Files.readString(root.resolve(relative));
-            assertTrue(source.contains("Commands.literal(\"feature\")"), relative);
-            assertTrue(source.contains("Commands.literal(\"list\")"), relative);
-            assertTrue(source.contains("Commands.literal(\"reload\")"), relative);
-            assertTrue(source.contains("Commands.literal(\"enable\")"), relative);
-            assertTrue(source.contains("Commands.literal(\"disable\")"), relative);
-            assertTrue(source.contains("Commands.literal(\"status\")"), relative);
-            assertTrue(source.contains("ServerConfigClient.requestImmediateFetch()"), relative);
-            assertTrue(source.contains("enable Venary, then run /vonixsu feature reload"), relative);
-            assertFalse(source.contains("Forcing /server-config fetch"), relative);
+        for (String relative : MAIN_ROOTS) {
+            Path sourceRoot = root.resolve(relative);
+            assertTrue(Files.isDirectory(sourceRoot), relative);
+            assertFalse(Files.exists(sourceRoot.resolve("venary")), relative);
+            try (Stream<Path> files = Files.walk(sourceRoot)) {
+                files.filter(path -> path.toString().endsWith(".java")).forEach(path -> {
+                    try {
+                        String source = Files.readString(path);
+                        for (String marker : FORBIDDEN_MARKERS) {
+                            assertFalse(source.contains(marker), path + " contains removed marker " + marker);
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
         }
     }
 
     @Test
-    void vonixsuRegistersVersionStatusReloadAndFeatureTree() throws IOException {
+    void metaCommandKeepsStandaloneAdministrativeSurface() throws IOException {
         Path root = ImportBoundaryTest.repoRoot();
-        for (String relative : MOD_COMMANDS) {
-            String source = Files.readString(root.resolve(relative));
-            assertTrue(source.contains("Commands.literal(\"vonixsu\")"), relative);
-            assertTrue(source.contains("Commands.literal(\"version\")"), relative);
-            assertTrue(source.contains("Commands.literal(\"status\")"), relative);
-            assertTrue(source.contains("Commands.literal(\"reload\")"), relative);
-            assertTrue(source.contains("FeatureCommand.tree()"), relative);
-            assertTrue(source.contains("ModConfig.INSTANCE.reload()"), relative);
-            assertTrue(source.contains("VenaryClient.init(ModConfig.INSTANCE.getVenaryConfig())"), relative);
+        for (String relative : MAIN_ROOTS) {
+            Path commands = root.resolve(relative).resolve("command/ModCommands.java");
+            String source = Files.readString(commands);
+            assertTrue(source.contains("Commands.literal(\"vonixsu\")"), commands.toString());
+            assertTrue(source.contains("Commands.literal(\"version\")"), commands.toString());
+            assertTrue(source.contains("Commands.literal(\"status\")"), commands.toString());
+            assertTrue(source.contains("Commands.literal(\"reload\")"), commands.toString());
+            assertFalse(source.contains("FeatureCommand"), commands.toString());
+            assertFalse(source.contains("LinkCommands"), commands.toString());
         }
     }
 
     @Test
-    void eventHandlersStartTheFeaturePollerAndTickIt() throws IOException {
+    void currentOperatorDocsDescribeStandaloneOnly() throws IOException {
         Path root = ImportBoundaryTest.repoRoot();
-        for (String relative : EVENT_HANDLERS) {
-            String source = Files.readString(root.resolve(relative));
-            assertTrue(source.contains("ServerConfigClient.startPolling()"), relative);
-            assertTrue(source.contains("ServerConfigClient.onTick"), relative);
-            assertTrue(source.contains("FeatureRegistry.getInstance()"), relative);
-            assertTrue(source.contains("VenaryClient.init"), relative);
-            assertTrue(source.contains("KitManager.getInstance().loadFromJson"), relative);
-        }
-    }
-
-    @Test
-    void operatorDocsDoNotPresentServerConfigAsAMinecraftCommand() throws IOException {
-        Path root = ImportBoundaryTest.repoRoot();
-        String commands = Files.readString(root.resolve("docs/COMMANDS.md"));
         String readme = Files.readString(root.resolve("README.md"));
-        assertTrue(commands.contains("/vonixsu feature reload"));
-        assertTrue(commands.contains("/vonixsu feature list"));
-        assertTrue(commands.contains("is not a Minecraft command"));
-        assertTrue(readme.contains("/vonixsu feature reload"));
-        assertFalse(readme.contains("run /server-config"));
-        assertFalse(commands.contains("Use `/server-config`"));
-        assertFalse(commands.contains("run `/server-config`"));
+        String commands = Files.readString(root.resolve("docs/COMMANDS.md"));
+        assertTrue(readme.contains("2.2.0"));
+        assertTrue(readme.contains("standalone"));
+        for (String marker : List.of("Venary", "venary", "/link", "/unlink", "/server-config", "/vonixsu feature")) {
+            assertFalse(readme.contains(marker), "README contains removed marker " + marker);
+            assertFalse(commands.contains(marker), "COMMANDS.md contains removed marker " + marker);
+        }
     }
 }

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-09-12
+
+### Removed
+- Remove Venary/site integration and all remote HTTP, configuration, account-link, player-sync, feature-polling, and donation-rank paths from every loader cell.
+- Remove the public Companion-control panel API/SPI surface while retaining the inventory-provider SPI used by standalone inventory commands.
+
+### Preserved
+- Keep standalone essentials commands and persisted SQLite behavior for kits, homes, warps, teleports, administration, and moderation.
+- Keep LuckPerms permission-node enforcement with vanilla operator fallback and optional chat metadata.
+
 ## [2.1.2] - 2026-09-12
 
 ### Added

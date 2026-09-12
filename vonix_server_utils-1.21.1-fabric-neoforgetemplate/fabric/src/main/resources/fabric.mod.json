@@ -3,7 +3,7 @@
   "id": "vonix_server_utilities",
   "version": "${version}",
   "name": "Vonix Server Utilities",
-  "description": "Full-featured server utility mod: homes, warps, kits, TPA, teleport, admin tools, world commands, moderation, and Venary integration.",
+  "description": "Full-featured server utility mod: homes, warps, kits, TPA, teleport, admin tools, world commands, and moderation.",
   "authors": [
     "Vonix Network"
   ],

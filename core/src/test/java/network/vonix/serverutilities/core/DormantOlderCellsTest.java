@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Older VSU templates remain on disk for history and are not part of the
- * repository's native include graph. The 2.1.2 release separately verifies
+ * repository's native include graph. The 2.2.0 candidate separately verifies
  * the complete nine-cell chat-formatting matrix.
  */
 class DormantOlderCellsTest {

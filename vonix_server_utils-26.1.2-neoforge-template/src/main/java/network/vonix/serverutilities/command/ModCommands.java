@@ -18,7 +18,6 @@ import network.vonix.serverutilities.features.PermissionGate;
 import network.vonix.serverutilities.homes.HomeManager;
 import network.vonix.serverutilities.kits.KitManager;
 import network.vonix.serverutilities.teleport.TeleportManager;
-import network.vonix.serverutilities.venary.LinkCommands;
 import network.vonix.serverutilities.warps.WarpManager;
 
 import java.util.UUID;
@@ -595,7 +594,6 @@ public final class ModCommands {
                 .then(Commands.literal("status").executes(ModCommands::showStatus))
                 .then(Commands.literal("reload")
                         .executes(ModCommands::reloadConfig))
-                .then(FeatureCommand.tree())
                 .executes(ModCommands::showHelp));
     }
 
@@ -613,19 +611,14 @@ public final class ModCommands {
         ctx.getSource().sendSuccess(
                 () -> Component.literal("§6[VSU] §fStatus: §aOnline §7(" + players + "/" + max + ")"), false);
         ctx.getSource().sendSuccess(
-                () -> Component.literal("§7Modules: homes, warps, kits, TPA, back, admin, world, venary"), false);
-        // Venary integration status (masked secrets).
-        LinkCommands.appendStatusLines(ctx.getSource());
+                () -> Component.literal("§7Modules: homes, warps, kits, TPA, back, admin, world"), false);
         // Feature flag summary.
-        ctx.getSource().sendSuccess(() -> Component.literal(FeatureCommand.summaryLine()), false);
         return 1;
     }
 
     private static int reloadConfig(CommandContext<CommandSourceStack> ctx) {
         try {
             boolean ok = ModConfig.INSTANCE.reload();
-            // Re-init the Venary client with the freshly-loaded settings.
-            network.vonix.serverutilities.venary.VenaryClient.init(ModConfig.INSTANCE.getVenaryConfig());
             // Reload kits.json so operators can hot-edit kit definitions too.
             try { KitManager.getInstance().reloadFromJson(ctx.getSource().getServer()); } catch (Throwable ignore) {}
             if (ok) ctx.getSource().sendSuccess(
@@ -645,7 +638,6 @@ public final class ModCommands {
         ctx.getSource().sendSuccess(() -> Component.literal("§e/vonixsu version §7— show version"), false);
         ctx.getSource().sendSuccess(() -> Component.literal("§e/vonixsu status  §7— show server status"), false);
         ctx.getSource().sendSuccess(() -> Component.literal("§e/vonixsu reload  §7— reload info"), false);
-        ctx.getSource().sendSuccess(() -> Component.literal("§e/vonixsu feature [list|enable|disable|reload|status] §7— manage feature flags"), false);
         return 1;
     }
 }

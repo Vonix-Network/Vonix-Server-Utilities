@@ -1,11 +1,12 @@
 # VSU Permissions Reference
 
-Canonical permission node tree for Vonix Server Utilities v1.6.1. Every command in [COMMANDS.md](COMMANDS.md) is gated by exactly one node from this document.
+Canonical permission node tree for Vonix Server Utilities v2.2.0. Every command in [COMMANDS.md](COMMANDS.md) is gated by exactly one node from this document.
 
 ## Table of contents
 
 - [Naming convention](#naming-convention)
 - [Full node table](#full-node-table)
+- [Standalone boundary](#standalone-boundary)
 - [Bypass nodes](#bypass-nodes)
 - [Group recipes](#group-recipes)
   - [default-player](#default-player)
@@ -67,7 +68,6 @@ Sorted alphabetically by command. Sub-variants (e.g. `/nick self` vs `/nick <pla
 | `/kit`, `/kits` | `vsu.command.kit` | 0 |
 | `/lag` | `vsu.admin.lag` | 2 |
 | `/lightning`, `/smite` | `vsu.admin.smite` | 2 |
-| `/link`, `/unlink` | `vsu.command.link` | 0 |
 | `/list` | `vsu.command.utility` | 0 |
 | `/more` | `vsu.command.utility` | 0 |
 | `/mute`, `/tempmute`, `/unmute`, `/mutelist` | `vsu.mod.mute` | 3 |
@@ -84,11 +84,15 @@ Sorted alphabetically by command. Sub-variants (e.g. `/nick self` vs `/nick <pla
 | `/tp`, `/tphere`, `/tpall`, `/tppos` | `vsu.admin.teleport` | 2 |
 | `/tpa`, `/tpahere`, `/tpaccept`, `/tpdeny` | `vsu.command.tpa` | 0 |
 | `/vanish` | `vsu.admin.vanish` | 2 |
-| `/vonixsu`, `/vonixsu feature ...` | `vsu.admin.manage` | 3 |
+| `/vonixsu` | `vsu.admin.manage` | 3 |
 | `/warn`, `/warnings` | `vsu.mod.warn` | 2 |
 | `/warp`, `/warps` | `vsu.command.warp` | 0 |
 | `/whois` | `vsu.command.utility` | 0 |
 | `/workbench` | `vsu.command.utility` | 0 |
+
+## Standalone boundary
+
+VSU 2.2.0 is server-local. It ships no account-link, site, remote HTTP, player-sync, donation-rank, or feature-polling permission nodes; the remaining `vsu.*` nodes are enforced through LuckPerms when present, with the documented vanilla op fallback.
 
 ## Bypass nodes
 
@@ -121,7 +125,6 @@ Granted to everyone on first login. Covers basic player commands.
   - `vsu.command.nick`
   - `vsu.command.message`
   - `vsu.command.utility`
-  - `vsu.command.link`
 
 ```
 lp creategroup default-player
@@ -136,7 +139,6 @@ lp group default-player permission set vsu.command.spawn true
 lp group default-player permission set vsu.command.nick true
 lp group default-player permission set vsu.command.message true
 lp group default-player permission set vsu.command.utility true
-lp group default-player permission set vsu.command.link true
 ```
 
 ### trusted
