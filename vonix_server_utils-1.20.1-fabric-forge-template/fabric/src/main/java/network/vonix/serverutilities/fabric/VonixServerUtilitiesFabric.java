@@ -10,5 +10,8 @@ public final class VonixServerUtilitiesFabric implements ModInitializer {
         network.vonix.serverutilities.platform.PlatformEvents.Holder.install(new VsuPlatformEvents());
         VonixServerUtilities.init();
         FabricModerationListener.register();
+        
+        // Chat formatter: rewrite chat messages with LP prefix.
+        FabricChatFormatHandler.register();
     }
 }
