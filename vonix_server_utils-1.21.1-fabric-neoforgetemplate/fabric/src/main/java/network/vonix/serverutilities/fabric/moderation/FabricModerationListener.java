@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import network.vonix.serverutilities.VonixServerUtilities;
+import network.vonix.serverutilities.chat.ChatFormatter;
 import network.vonix.serverutilities.moderation.MuteState;
 import network.vonix.serverutilities.moderation.Punishment;
 import network.vonix.serverutilities.moderation.PunishmentRepository;
@@ -71,9 +72,20 @@ public final class FabricModerationListener {
         // ── Mute check on chat ───────────────────────────────────────────────
         ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, sender, params) -> {
             if (sender == null) return true;
-            if (!MuteState.isMuted(sender.getUUID())) return true;
-            notifyMuted(sender);
-            return false;
+            if (MuteState.isMuted(sender.getUUID())) {
+                notifyMuted(sender);
+                return false;
+            }
+            try {
+                Optional<Component> formatted = ChatFormatter.format(sender, message.signedContent());
+                if (formatted.isPresent()) {
+                    sender.server.getPlayerList().broadcastSystemMessage(formatted.get(), false);
+                    return false;
+                }
+            } catch (Throwable t) {
+                VonixServerUtilities.LOGGER.error("[VonixSU] Fabric chat formatting failed", t);
+            }
+            return true;
         });
 
         // ── Mute check on /me-style command messages ─────────────────────────

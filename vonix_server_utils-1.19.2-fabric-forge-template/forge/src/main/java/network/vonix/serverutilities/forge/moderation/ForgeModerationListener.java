@@ -10,6 +10,7 @@ import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import network.vonix.serverutilities.VonixServerUtilities;
+import network.vonix.serverutilities.chat.ChatFormatter;
 import network.vonix.serverutilities.moderation.MuteState;
 import network.vonix.serverutilities.moderation.Punishment;
 import network.vonix.serverutilities.moderation.PunishmentRepository;
@@ -86,9 +87,16 @@ public final class ForgeModerationListener {
     public static void onChat(ServerChatEvent event) {
         ServerPlayer player = event.getPlayer();
         if (player == null) return;
-        if (!MuteState.isMuted(player.getUUID())) return;
-        event.setCanceled(true);
-        notifyMuted(player);
+        if (MuteState.isMuted(player.getUUID())) {
+            event.setCanceled(true);
+            notifyMuted(player);
+            return;
+        }
+        try {
+            ChatFormatter.format(player, event.getRawText()).ifPresent(event::setMessage);
+        } catch (Throwable t) {
+            VonixServerUtilities.LOGGER.error("[VonixSU] Forge chat formatting failed", t);
+        }
     }
 
     // ── Chat-style command intercept ─────────────────────────────────────────

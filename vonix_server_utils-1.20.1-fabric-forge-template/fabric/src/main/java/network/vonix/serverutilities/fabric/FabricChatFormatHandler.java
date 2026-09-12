@@ -17,7 +17,7 @@ public final class FabricChatFormatHandler {
         ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, sender, params) -> {
             if (sender == null) return true;
             try {
-                Optional<Component> formatted = ChatFormatter.format(sender, message.decoratedContent());
+                Optional<Component> formatted = ChatFormatter.format(sender, message.decoratedContent().getString());
                 if (formatted.isEmpty()) return true;
                 sender.server.getPlayerList().broadcastSystemMessage(formatted.get(), false);
                 return false;

@@ -10,8 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Older VSU templates remain on disk for history. S1 does not repair them and
- * must not claim 1.18.2 / 1.19.2 / 1.20.1 parity, including 1.18.2 chat mixins.
+ * Older VSU templates remain on disk for history and are not part of the
+ * repository's native include graph. The 2.1.2 release separately verifies
+ * the complete nine-cell chat-formatting matrix.
  */
 class DormantOlderCellsTest {
 
@@ -33,12 +34,12 @@ class DormantOlderCellsTest {
     }
 
     @Test
-    void workingCellDoesNotShipChatFormatterOrMixinClasses() throws IOException {
+    void workingCellsShipFormatterWithoutForwardingTheOldMixin() throws IOException {
         Path root = ImportBoundaryTest.repoRoot();
-        assertFalse(Files.exists(root.resolve(
+        assertTrue(Files.exists(root.resolve(
                 "vonix_server_utils-1.21.1-fabric-neoforgetemplate/common/src/main/java/network/vonix/serverutilities/chat/ChatFormatter.java")),
-                "1.21.1 working cell dropped ChatFormatter; do not copy 1.18.2 mixin bytecode forward");
-        assertFalse(Files.exists(root.resolve(
+                "1.21.1 working cell must include the standalone formatter");
+        assertTrue(Files.exists(root.resolve(
                 "vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/chat/ChatFormatter.java")));
         String mixin1211 = Files.readString(root.resolve(
                 "vonix_server_utils-1.21.1-fabric-neoforgetemplate/common/src/main/resources/vonix_server_utilities.mixins.json"));

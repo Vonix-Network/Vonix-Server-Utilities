@@ -1,10 +1,10 @@
 # Vonix Server Utilities (VSU)
 
-A server-side essentials mod for Minecraft — homes, warps, kits, teleport, social, admin tooling, moderation, and Venary site integration — built on **Architectury** for **Forge, NeoForge, and Fabric** across the supported Minecraft target versions.
+A server-side essentials mod for Minecraft — homes, warps, kits, teleport, social, admin tooling, moderation, and optional integrations — built on **Architectury** for **Forge, NeoForge, and Fabric** across the supported Minecraft target versions.
 
-**Current embedded mod version:** `2.1.1` (stable release) · **Common repository line:** `2.1.1` · See [CHANGELOG.md](CHANGELOG.md) · License: All Rights Reserved (Vonix Network)
+**Current embedded mod version:** `2.1.2` (stable release) · **Common repository line:** `2.1.2` · See [CHANGELOG.md](CHANGELOG.md) · License: All Rights Reserved (Vonix Network)
 
-The Minecraft **26.1.2 / NeoForge 26.1.2.93** lane is included in the `2.1.1` stable release under `vonix_server_utils-26.1.2-neoforge-template/`. Its artifact uses the same exact embedded release version as the other lanes.
+The Minecraft **26.1.2 / NeoForge 26.1.2.93** lane is included in the `2.1.2` stable release under `vonix_server_utils-26.1.2-neoforge-template/`. Its artifact uses the same exact embedded release version as the other lanes.
 
 ---
 
@@ -14,7 +14,8 @@ The Minecraft **26.1.2 / NeoForge 26.1.2.93** lane is included in the `2.1.1` st
 - **Admin toolkit** — vanish, god, fly, heal, peek (`/invsee`, `/enderchest`, `/backsee`, `/accsee`), weather/time control.
 - **Moderation (v1.7.1)** — SQLite-backed `/tempban`, `/mute`, `/kick`, `/warn`, `/banlist` with duration parser, race-safe mute enforcement, and expiry sweeper.
 - **LuckPerms-aware permissions (v1.6.0)** — every command has a `vsu.*` permission node, with graceful vanilla op-level fallback when LuckPerms is absent.
-- **Venary site integration** — account linking (`/link`), periodic player sync, and automatic donation-rank → LuckPerms group sync.
+- **Optional Venary site integration** — account linking (`/link`), periodic player sync, and automatic donation-rank → LuckPerms group sync when configured; public VSU operation does not require Venary.
+- **Native chat formatting (v2.1.2)** — optional LuckPerms prefix, suffix, and name-color metadata in server chat, with safe fallback when LuckPerms is absent.
 
 ---
 

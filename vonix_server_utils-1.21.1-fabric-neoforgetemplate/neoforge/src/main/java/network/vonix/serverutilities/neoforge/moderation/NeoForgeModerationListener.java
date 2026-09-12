@@ -9,6 +9,7 @@ import net.neoforged.neoforge.event.CommandEvent;
 import net.neoforged.neoforge.event.ServerChatEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import network.vonix.serverutilities.VonixServerUtilities;
+import network.vonix.serverutilities.chat.ChatFormatter;
 import network.vonix.serverutilities.moderation.MuteState;
 import network.vonix.serverutilities.moderation.Punishment;
 import network.vonix.serverutilities.moderation.PunishmentRepository;
@@ -84,9 +85,16 @@ public final class NeoForgeModerationListener {
     public static void onChat(ServerChatEvent event) {
         ServerPlayer player = event.getPlayer();
         if (player == null) return;
-        if (!MuteState.isMuted(player.getUUID())) return;
-        event.setCanceled(true);
-        notifyMuted(player);
+        if (MuteState.isMuted(player.getUUID())) {
+            event.setCanceled(true);
+            notifyMuted(player);
+            return;
+        }
+        try {
+            ChatFormatter.format(player, event.getMessage().getString()).ifPresent(event::setMessage);
+        } catch (Throwable t) {
+            VonixServerUtilities.LOGGER.error("[VonixSU] NeoForge chat formatting failed", t);
+        }
     }
 
     // ── Chat-style command intercept ─────────────────────────────────────────

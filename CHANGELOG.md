@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.2] - 2026-09-12
+
+### Added
+- Add standalone optional LuckPerms prefix, suffix, and name-color formatting to native server chat across all nine supported Minecraft/loader cells.
+- Preserve a safe vanilla fallback when LuckPerms is absent; Venary is not required for public VSU functionality.
+
+### Fixed
+- Align every supported lane and release artifact at `2.1.2`.
+- Use each Minecraft/loader lane's actual chat-event API instead of sharing incompatible event signatures.
+- Keep the 1.18.2 Fabric signed-chat Mixin path compatible while applying the formatter to the server broadcast.
+- Update the dormant-cell contract test to require formatter coverage in the 1.21.1 and 26.1.2 cells.
+
 ## [2.1.1] - 2026-09-11
 
 ### Fixed

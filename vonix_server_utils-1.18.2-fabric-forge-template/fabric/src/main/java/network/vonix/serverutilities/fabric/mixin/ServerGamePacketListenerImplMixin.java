@@ -1,8 +1,10 @@
 package network.vonix.serverutilities.fabric.mixin;
 
 import net.minecraft.network.protocol.game.ServerboundChatPacket;
+import net.minecraft.network.chat.ChatType;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import network.vonix.serverutilities.chat.ChatFormatter;
 import network.vonix.serverutilities.fabric.moderation.FabricModerationListener;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -51,9 +53,20 @@ public abstract class ServerGamePacketListenerImplMixin {
             int sp = body.indexOf(' ');
             String root = (sp < 0 ? body : body.substring(0, sp)).toLowerCase();
             if (!CHAT_COMMANDS.contains(root)) return;
+            if (FabricModerationListener.checkAndNotifyMuted(p)) ci.cancel();
+            return;
         }
         if (FabricModerationListener.checkAndNotifyMuted(p)) {
             ci.cancel();
+            return;
+        }
+        try {
+            ChatFormatter.format(p, msg).ifPresent(formatted -> {
+                p.server.getPlayerList().broadcastMessage(formatted, ChatType.CHAT, p.getUUID());
+                ci.cancel();
+            });
+        } catch (Throwable ignored) {
+            // Preserve vanilla chat if the optional formatter cannot run.
         }
     }
 }
