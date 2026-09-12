@@ -25,7 +25,7 @@ class PublicIdentityTest {
             String source = Files.readString(root.resolve(relative));
             assertTrue(source.contains("MOD_ID  = \"vonix_server_utilities\"")
                     || source.contains("MOD_ID = \"vonix_server_utilities\""), relative);
-            assertTrue(source.contains("VERSION = \"2.1.1\""), relative);
+            assertTrue(source.contains("VERSION = \"2.1.2\""), relative);
             assertFalse(source.contains("VERSION = \"2.0.0\""), relative);
         }
     }
