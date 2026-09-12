@@ -60,16 +60,18 @@ class PublicIdentityTest {
     }
 
     @Test
-    void removedControlSurfaceIsAbsentButInventorySpiRemains() throws IOException {
+    void removedPublicApiPackageIsAbsentAndInternalInventoryRemains() throws IOException {
         Path root = ImportBoundaryTest.repoRoot();
         for (String relative : VERSION_SOURCES) {
             Path source = root.resolve(relative).getParent();
             Path api = source.resolve("api");
-            assertTrue(Files.exists(api.resolve("InventoryProvider.java")), api.toString());
-            assertTrue(Files.exists(api.resolve("InventoryProviderRegistry.java")), api.toString());
-            assertTrue(Files.exists(api.resolve("InventoryView.java")), api.toString());
-            assertFalse(Files.exists(api.resolve("VonixPanel.java")), api.toString());
-            assertFalse(Files.exists(api.resolve("PanelTeleportRequest.java")), api.toString());
+            assertFalse(Files.exists(api), "public api package must be absent: " + api);
+            Path internal = source.resolve("inventory").resolve("internal");
+            assertTrue(Files.exists(internal.resolve("InventoryProvider.java")), internal.toString());
+            assertTrue(Files.exists(internal.resolve("InventoryProviderRegistry.java")), internal.toString());
+            assertTrue(Files.exists(internal.resolve("InventoryView.java")), internal.toString());
+            assertFalse(Files.exists(internal.resolve("VonixPanel.java")), internal.toString());
+            assertFalse(Files.exists(internal.resolve("PanelTeleportRequest.java")), internal.toString());
         }
     }
 }

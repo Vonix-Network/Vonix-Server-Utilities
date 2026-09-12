@@ -9,11 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Remove Venary/site integration and all remote HTTP, configuration, account-link, player-sync, feature-polling, and donation-rank paths from every loader cell.
-- Remove the public Companion-control panel API/SPI surface while retaining the inventory-provider SPI used by standalone inventory commands.
+- Remove the public Companion-control panel API/SPI surface.
+- Remove the public `network.vonix.serverutilities.api` inventory SPI and its ServiceLoader contract. VSU has no public API/SPI package. `/backsee` continues to use built-in resolvers moved to the internal package `network.vonix.serverutilities.inventory.internal`.
 
 ### Preserved
 - Keep standalone essentials commands and persisted SQLite behavior for kits, homes, warps, teleports, administration, and moderation.
 - Keep LuckPerms permission-node enforcement with vanilla operator fallback and optional chat metadata.
+- Keep `/backsee` and its built-in Curios, capability, DataComponents (1.21+), and legacy-NBT inventory resolvers as private VSU implementation. Third-party registration is not supported.
 
 ## [2.1.2] - 2026-09-12
 
@@ -333,6 +335,8 @@ For each of the 4 Forge/NeoForge jars built at 1.5.1:
   both mods' sqlite-jdbc-3.46.1.0 down to a single `org.sqlite` module).
 
 ## [1.5.0] - 2026-06-27
+
+Historical 1.5.0 note: this public inventory SPI was internalized and unpublished in 2.2.0.
 
 `InventoryProvider` SPI under `network.vonix.serverutilities.api` —
 the hardcoded `/backsee` passes (Curios → DataComponents → capability

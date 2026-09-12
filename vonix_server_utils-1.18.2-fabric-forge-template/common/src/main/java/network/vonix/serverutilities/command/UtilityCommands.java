@@ -19,9 +19,9 @@ import network.vonix.serverutilities.features.FeatureGate;
 import network.vonix.serverutilities.features.PermissionGate;
 import network.vonix.serverutilities.inventory.InvseeContainer;
 import network.vonix.serverutilities.inventory.AccessoryHelper;
-import network.vonix.serverutilities.api.InventoryProvider;
-import network.vonix.serverutilities.api.InventoryProviderRegistry;
-import network.vonix.serverutilities.api.InventoryView;
+import network.vonix.serverutilities.inventory.internal.InventoryProvider;
+import network.vonix.serverutilities.inventory.internal.InventoryProviderRegistry;
+import network.vonix.serverutilities.inventory.internal.InventoryView;
 import network.vonix.serverutilities.teleport.TeleportManager;
 
 import java.util.*;
@@ -573,13 +573,11 @@ public final class UtilityCommands {
     }
 
     private static int openBackpack(CommandContext<CommandSourceStack> ctx, ServerPlayer target, int requestedSlot) {
-        // /backsee dispatches through the InventoryProvider SPI (network.vonix.serverutilities.api).
+        // /backsee dispatches through VSU's internal inventory providers (network.vonix.serverutilities.inventory.internal).
         // Built-in providers (registered at mod init):
         //   - vonix:curios          (priority 100) — Curios slot scan, soft-dep
         //   - vonix:capability      (priority 200) — universal IItemHandler reflection bridge
         //   - vonix:legacy_nbt      (priority 300) — Items / inventory / BlockEntityTag.Items NBT walk
-        // Third-party mods can register their own providers via InventoryProviderRegistry.register(...)
-        // or META-INF/services/network.vonix.serverutilities.api.InventoryProvider.
         if (!(ctx.getSource().getEntity() instanceof ServerPlayer)) return 0;
         ServerPlayer player = (ServerPlayer) ctx.getSource().getEntity();
 
@@ -589,7 +587,7 @@ public final class UtilityCommands {
                 viewOpt = provider.resolve(target, requestedSlot);
             } catch (Throwable t) {
                 VonixServerUtilities.LOGGER.warn(
-                        "[VonixSU/SPI] InventoryProvider '{}' threw during resolve; skipping. {}",
+                        "[VonixSU] InventoryProvider '{}' threw during resolve; skipping. {}",
                         provider.id(), t.toString());
                 continue;
             }

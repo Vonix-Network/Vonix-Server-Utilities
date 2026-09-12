@@ -2,8 +2,8 @@ package network.vonix.serverutilities.inventory.providers;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import network.vonix.serverutilities.api.InventoryProvider;
-import network.vonix.serverutilities.api.InventoryView;
+import network.vonix.serverutilities.inventory.internal.InventoryProvider;
+import network.vonix.serverutilities.inventory.internal.InventoryView;
 import network.vonix.serverutilities.inventory.CapabilityInventoryBridge;
 
 import java.util.Optional;

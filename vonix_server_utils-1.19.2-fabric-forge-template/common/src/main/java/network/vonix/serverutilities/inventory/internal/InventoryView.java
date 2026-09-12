@@ -1,4 +1,4 @@
-package network.vonix.serverutilities.api;
+package network.vonix.serverutilities.inventory.internal;
 
 import net.minecraft.world.item.ItemStack;
 
@@ -10,7 +10,7 @@ import net.minecraft.world.item.ItemStack;
  * back via {@link #setStackInSlot(int, ItemStack)} + {@link #persist()} on each container
  * change. Implementations own the persistence path back to the underlying storage.
  *
- * <p>Part of the {@code network.vonix.serverutilities.api} published SPI — SemVer stable.
+ * <p>Internal to VSU. Not a public API.
  */
 public interface InventoryView {
 

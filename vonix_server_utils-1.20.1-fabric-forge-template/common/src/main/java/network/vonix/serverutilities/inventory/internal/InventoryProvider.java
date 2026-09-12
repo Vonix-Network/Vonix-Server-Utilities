@@ -1,28 +1,18 @@
-package network.vonix.serverutilities.api;
+package network.vonix.serverutilities.inventory.internal;
 
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Optional;
 
 /**
- * Public SPI for resolving an "openable inventory" attached to an item on a target player.
+ * Internal resolver for an openable inventory attached to an item on a target player.
  *
- * <p>Used by {@code /backsee} to dispatch through a priority-ordered chain of providers.
- * Third-party mods can ship their own {@link InventoryProvider} implementations either by:
- * <ol>
- *   <li>Explicit registration: {@link InventoryProviderRegistry#register(InventoryProvider)}
- *       during mod init.</li>
- *   <li>{@link java.util.ServiceLoader}: drop a file at
- *       {@code META-INF/services/network.vonix.serverutilities.api.InventoryProvider}
- *       listing the FQN of your implementation.</li>
- * </ol>
- *
- * <p>This interface is part of the {@code network.vonix.serverutilities.api} package, the
- * published, SemVer-stable surface of VSU. Breaking changes only in MAJOR.
+ * <p>Used only by VSU's {@code /backsee} command through a priority-ordered chain of
+ * built-in providers registered at mod init. This is not a public API or ServiceLoader SPI.
  */
 public interface InventoryProvider {
 
-    /** Stable identifier — e.g. {@code "vonix:capability"}, {@code "vonix:curios"}, {@code "yourmod:custom"}. */
+    /** Stable identifier — e.g. {@code "vonix:capability"}, {@code "vonix:curios"}. */
     String id();
 
     /**

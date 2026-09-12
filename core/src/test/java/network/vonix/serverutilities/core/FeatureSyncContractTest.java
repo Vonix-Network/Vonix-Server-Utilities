@@ -24,7 +24,9 @@ class FeatureSyncContractTest {
             "Venary", "venary", "ServerConfigClient", "FeatureRegistry", "FeatureCommand",
             "RankGroupSyncer", "RankSyncTask", "LinkCommands", "PlayerSyncTask",
             "VonixPanel", "PanelCapabilities", "PanelTeleport", "server-config",
-            "api.vonix", "java.net.http", "HttpClient");
+            "api.vonix", "java.net.http", "HttpClient",
+            "package network.vonix.serverutilities.api",
+            "import network.vonix.serverutilities.api.");
 
     @Test
     void everyCellHasNoRemoteOrCompanionControlSource() throws IOException {
@@ -60,6 +62,27 @@ class FeatureSyncContractTest {
             assertTrue(source.contains("Commands.literal(\"reload\")"), commands.toString());
             assertFalse(source.contains("FeatureCommand"), commands.toString());
             assertFalse(source.contains("LinkCommands"), commands.toString());
+        }
+    }
+
+    @Test
+    void everyCellKeepsInternalBackseeInventoryWiring() throws IOException {
+        Path root = ImportBoundaryTest.repoRoot();
+        for (String relative : MAIN_ROOTS) {
+            Path commands = root.resolve(relative).resolve("command/UtilityCommands.java");
+            String source = Files.readString(commands);
+            assertTrue(source.contains("Commands.literal(\"backsee\")"), commands.toString());
+            assertTrue(source.contains("InventoryProviderRegistry.providers()"), commands.toString());
+            assertTrue(source.contains("network.vonix.serverutilities.inventory.internal"), commands.toString());
+            assertFalse(source.contains("ServiceLoader"), commands.toString());
+            assertFalse(source.contains("META-INF/services"), commands.toString());
+            assertFalse(source.contains("Third-party mods can register"), commands.toString());
+
+            Path init = root.resolve(relative).resolve("VonixServerUtilities.java");
+            String initSource = Files.readString(init);
+            assertTrue(initSource.contains("registerBuiltinInventoryProviders"), init.toString());
+            assertTrue(initSource.contains("InventoryProviderRegistry.register"), init.toString());
+            assertFalse(initSource.contains("META-INF/services"), init.toString());
         }
     }
 

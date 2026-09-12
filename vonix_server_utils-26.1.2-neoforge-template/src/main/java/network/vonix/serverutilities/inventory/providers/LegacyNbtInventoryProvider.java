@@ -1,8 +1,8 @@
 package network.vonix.serverutilities.inventory.providers;
 
 import net.minecraft.server.level.ServerPlayer;
-import network.vonix.serverutilities.api.InventoryProvider;
-import network.vonix.serverutilities.api.InventoryView;
+import network.vonix.serverutilities.inventory.internal.InventoryProvider;
+import network.vonix.serverutilities.inventory.internal.InventoryView;
 
 import java.util.Optional;
 
@@ -17,10 +17,9 @@ import java.util.Optional;
  * handles capability-exposing modded backpacks.
  *
  * <p>The provider is kept registered (same id / priority as on 1.18.2 / 1.19.2 / 1.20.1)
- * so a single 3rd-party {@code META-INF/services} registration list works across every
- * VSU template — and so user expectations about pass-ordering hold whichever MC version
- * {@code resolve} therefore intentionally returns {@link Optional#empty()} on this target; this is
- * a functional compatibility no-op, not an unimplemented command path.
+ * so pass-ordering holds whichever MC version is targeted. {@code resolve} therefore
+ * intentionally returns {@link Optional#empty()} on this target; this is a functional
+ * compatibility no-op, not an unimplemented command path.
  *
  * <p>Priority 300 — same as on older targets.
  */

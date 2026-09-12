@@ -21,7 +21,7 @@ class CapabilityBoundaryTest {
         List<Path> roots = List.of(
                 root.resolve("vonix_server_utils-1.21.1-fabric-neoforgetemplate/common/src/main/java"),
                 root.resolve("vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/inventory"),
-                root.resolve("vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/api"),
+                root.resolve("vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/inventory/internal"),
                 root.resolve("vonix_server_utils-26.1.2-neoforge-template/src/main/java/network/vonix/serverutilities/inventory/providers"));
         List<String> hits = new ArrayList<>();
         for (Path dir : roots) {
