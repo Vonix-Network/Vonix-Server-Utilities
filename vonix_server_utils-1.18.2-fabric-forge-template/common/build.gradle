@@ -17,6 +17,8 @@ dependencies {
 
     // LuckPerms API (optional integration; soft-dep at runtime)
     compileOnly 'net.luckperms:api:5.4'
+    // Runtime classpath for the ownership-gate test. compileOnly is not visible there.
+    testImplementation 'net.luckperms:api:5.4'
 }
 
 tasks.register('crateRulesTest', JavaExec) {
@@ -49,10 +51,19 @@ tasks.register('panelSpiSmokeTest', JavaExec) {
     mainClass = 'network.vonix.serverutilities.api.PanelSpiSmokeTest'
 }
 
+tasks.register('donationRankOwnershipGateTest', JavaExec) {
+    group = 'verification'
+    description = 'Proves a disabled donation_ranks feature performs no player or LuckPerms group sync.'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'network.vonix.serverutilities.donation_ranks.DonationRankOwnershipGateTest'
+}
+
 tasks.named('check') {
     dependsOn tasks.named('crateRulesTest')
     dependsOn tasks.named('muteStateTest')
     dependsOn tasks.named('kitGroupsTest')
     dependsOn tasks.named('panelSpiSmokeTest')
+    dependsOn tasks.named('donationRankOwnershipGateTest')
 }
 

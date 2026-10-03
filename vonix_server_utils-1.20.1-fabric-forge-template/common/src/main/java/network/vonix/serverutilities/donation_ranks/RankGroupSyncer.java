@@ -20,8 +20,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * chat prefix, and any meta from {@code lp_meta}. The result is counted and
  * a single summary line is logged.
  *
- * <p>If LuckPerms is missing the whole pass is a no-op (the bridge already
- * logs the warning).
+ * <p>The pass no-ops when {@link FeatureRegistry#isDonationRankSyncEnabled()}
+ * is false, and when LuckPerms is missing (the bridge already logs the
+ * warning). A disabled feature fails closed: cached rank rows are not
+ * pushed into LuckPerms.
  */
 public final class RankGroupSyncer {
 
@@ -38,6 +40,9 @@ public final class RankGroupSyncer {
     }
 
     private static void syncAllInternal() {
+        // Same authoritative gate as player join. Explicitly disabled
+        // donation_ranks must not create or update LuckPerms groups.
+        if (!FeatureRegistry.getInstance().isDonationRankSyncEnabled()) return;
         if (!LuckPermsBridge.isPresent()) return; // probe logs once at static init
         List<FeatureRegistry.DonationRank> ranks = FeatureRegistry.getInstance().getDonationRanks();
         if (ranks.isEmpty()) {

@@ -46,7 +46,14 @@ public final class RankSyncTask {
         // RuntimeException coming out of any LP-touching code cannot escape
         // and crash player join.
         try {
-            onJoinInternal(player);
+            if (player == null) return;
+            // Gate before identity reads or LuckPerms so a disabled feature
+            // performs no player donation-rank synchronization.
+            if (!FeatureRegistry.getInstance().isDonationRankSyncEnabled()) return;
+            if (!LuckPermsBridge.isPresent()) return;
+            VenaryClient client = VenaryClient.get();
+            if (client == null) return;
+            onJoin(player.getUUID(), player.getName().getString());
         } catch (LinkageError | RuntimeException t) {
             VonixServerUtilities.LOGGER.warn(
                     "[VonixSU/Ranks] onJoin disabled this tick due to {}: {}",
@@ -54,16 +61,17 @@ public final class RankSyncTask {
         }
     }
 
-    private static void onJoinInternal(ServerPlayer player) {
-        if (player == null) return;
-        if (!FeatureRegistry.getInstance().isEnabled("donation_ranks")) return;
+    /**
+     * Real player-sync entry used by {@link #onJoin(ServerPlayer)}.
+     * Repeats the authoritative feature gate so every caller fails closed
+     * when {@code donation_ranks} is disabled.
+     */
+    static void onJoin(UUID uuid, String username) {
+        if (!FeatureRegistry.getInstance().isDonationRankSyncEnabled()) return;
         if (!LuckPermsBridge.isPresent()) return;
 
         VenaryClient client = VenaryClient.get();
         if (client == null) return;
-
-        final UUID   uuid     = player.getUUID();
-        final String username = player.getName().getString();
 
         client.getPlayerRanks(uuid).handle((resp, err) -> {
             try { applyResponse(uuid, username, resp); }

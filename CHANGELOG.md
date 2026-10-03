@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- When the `donation_ranks` feature is disabled, VSU no longer synchronizes per-player donation ranks or LuckPerms donation-rank group metadata. The same feature gate covers player join, `RankGroupSyncer.syncAll()` (including server start), and the sync that runs after `/minecraft/server-config` hydration or feature refresh. Enabled donation-rank behavior is unchanged. The separate Companion entitlement contract is not modified.
+
 ## [2.1.2] - 2026-09-12
 
 ### Added

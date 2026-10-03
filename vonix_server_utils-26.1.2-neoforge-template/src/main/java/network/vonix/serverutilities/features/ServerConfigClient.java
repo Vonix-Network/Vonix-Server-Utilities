@@ -77,9 +77,13 @@ public final class ServerConfigClient {
                 // First successful hydration (or any donation-rank change) must
                 // re-run the LP group syncer — SERVER_STARTED fires before the first
                 // /server-config response, so syncAll() there sees an empty rank list.
-                try { RankGroupSyncer.syncAll(); }
-                catch (Throwable t) {
-                    VonixServerUtilities.LOGGER.warn("[VonixSU] post-hydration RankGroupSyncer threw: {}", t.getMessage());
+                // Skip the pass when donation_ranks is disabled. syncAll() repeats
+                // the same gate so every caller fails closed.
+                if (FeatureRegistry.getInstance().isDonationRankSyncEnabled()) {
+                    try { RankGroupSyncer.syncAll(); }
+                    catch (Throwable t) {
+                        VonixServerUtilities.LOGGER.warn("[VonixSU] post-hydration RankGroupSyncer threw: {}", t.getMessage());
+                    }
                 }
                 // Bounce back to the main thread to resend command trees.
                 server.execute(() -> resendCommandTrees(server));

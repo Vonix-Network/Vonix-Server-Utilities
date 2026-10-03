@@ -81,6 +81,16 @@ public final class FeatureRegistry {
         return v == null || v;
     }
 
+    /**
+     * Authoritative gate for donation-rank ownership: per-player rank sync and
+     * LuckPerms group-metadata sync. An explicit {@code false} fails closed.
+     * A missing flag stays fail-open through {@link #isEnabled(String)} so
+     * pre-hydration behavior is unchanged.
+     */
+    public boolean isDonationRankSyncEnabled() {
+        return isEnabled("donation_ranks");
+    }
+
     @SuppressWarnings("unchecked")
     public <T> T getSetting(String featureKey, String settingKey, T defaultValue) {
         JsonObject o = settings.get(featureKey);
