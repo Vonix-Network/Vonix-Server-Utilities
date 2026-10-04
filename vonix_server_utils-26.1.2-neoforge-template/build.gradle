@@ -40,6 +40,9 @@ dependencies {
     testImplementation "net.luckperms:api:5.4"
     testImplementation "org.xerial:sqlite-jdbc:3.46.1.0"
     testImplementation "com.google.code.gson:gson:2.10.1"
+    // Compile the ownership-gate JUnit entry. NeoForge's unit-test fixtures
+    // supply junit-fml, which installs a current FML loader before the test runs.
+    testImplementation "org.junit.jupiter:junit-jupiter:5.13.4"
     testRuntimeOnly "org.slf4j:slf4j-nop:2.0.13"
 }
 
@@ -58,6 +61,13 @@ neoForge {
         vonix_server_utilities {
             sourceSet sourceSets.main
         }
+    }
+
+    // The public RankSyncTask.onJoin(ServerPlayer) probe initializes ServerPlayer.
+    // That class loads AttachmentHolder, which requires a current FML loader.
+    // A plain JavaExec has none. NeoForge's unit-test session installs one.
+    unitTest {
+        enable()
     }
 }
 
@@ -79,10 +89,11 @@ sourceSets {
     }
 }
 
-// ModDev exposes Minecraft on the main compile classpath only. The ownership
-// gate test calls production methods whose signatures reference those types.
-// Use that compile classpath at runtime too; the full main runtime classpath
-// pulls in the NeoForge DevLaunch launcher, which this plain JavaExec does not run.
+// ModDev exposes Minecraft on the main compile classpath only. The plain
+// JavaExec probes still need those types, and the full main runtime classpath
+// pulls in the NeoForge DevLaunch launcher, which those probes do not run.
+// The ownership gate itself is the JUnit test task: NeoForge's unit-test
+// session installs a current FML loader before ServerPlayer is initialized.
 sourceSets.test.compileClasspath += sourceSets.main.compileClasspath
 sourceSets.test.runtimeClasspath += sourceSets.main.compileClasspath
 
@@ -118,12 +129,10 @@ tasks.register("panelSpiSmokeTest", JavaExec) {
     mainClass = "network.vonix.serverutilities.api.PanelSpiSmokeTest"
 }
 
-tasks.register("donationRankOwnershipGateTest", JavaExec) {
+tasks.register("donationRankOwnershipGateTest") {
     group = "verification"
-    description = "Proves a disabled donation_ranks feature performs no player or LuckPerms group sync."
-    dependsOn tasks.named("testClasses")
-    classpath = sourceSets.test.runtimeClasspath
-    mainClass = "network.vonix.serverutilities.donation_ranks.DonationRankOwnershipGateTest"
+    description = "Proves a disabled donation_ranks feature performs no player or LuckPerms group sync, including RankSyncTask.onJoin(ServerPlayer) under the NeoForge unit-test loader."
+    dependsOn tasks.named("test")
 }
 
 tasks.named("check") {
@@ -135,8 +144,13 @@ tasks.named("check") {
 }
 
 tasks.named("test") {
-    // Regression probes are JavaExec main classes; no JUnit discovery is expected.
-    failOnNoDiscoveredTests = false
+    // The other regression probes stay JavaExec tasks. This task is only the
+    // ownership gate, because that probe has to run after FML loader startup.
+    useJUnitPlatform()
+    failOnNoDiscoveredTests = true
+    filter {
+        includeTestsMatching("network.vonix.serverutilities.donation_ranks.DonationRankOwnershipGateJUnit")
+    }
 }
 
 publishing {

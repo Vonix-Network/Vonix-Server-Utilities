@@ -51,6 +51,11 @@ public final class FeatureRegistry {
     private static volatile Runnable publicationProbe;
     /** Snapshot the in-flight publication is about to store. Test-only. */
     private static volatile FeatureState pendingPublication;
+    /**
+     * Test-only gate after a first-run row count is known and before the
+     * synchronized read-modify-write. Production leaves this null.
+     */
+    private static volatile Runnable firstRunAutoEnableProbe;
 
     private static final FeatureState INITIAL_STATE = new FeatureState(
             Map.of(), Map.of(), List.of(), -1, false);
@@ -245,11 +250,19 @@ public final class FeatureRegistry {
             if (rs.next()) {
                 long n = rs.getLong(1);
                 if (n > 0) {
-                    FeatureState current = currentState();
-                    if (!current.features().containsKey(featureKey)) {
-                        Map<String, Boolean> enabled = new LinkedHashMap<>(current.features());
-                        enabled.put(featureKey, Boolean.TRUE);
-                        publish(current.withFeatures(Map.copyOf(enabled)));
+                    // A caller can already see this instance and publish through
+                    // update() or setEnabledLocal() while the row count is in hand.
+                    // Re-read under that same lock so this write cannot replace a
+                    // newer snapshot with the state observed before the count.
+                    Runnable hold = firstRunAutoEnableProbe;
+                    if (hold != null) hold.run();
+                    synchronized (this) {
+                        FeatureState current = currentState();
+                        if (!current.features().containsKey(featureKey)) {
+                            Map<String, Boolean> enabled = new LinkedHashMap<>(current.features());
+                            enabled.put(featureKey, Boolean.TRUE);
+                            publish(current.withFeatures(Map.copyOf(enabled)));
+                        }
                     }
                     VonixServerUtilities.LOGGER.info(
                             "[VonixSU] Auto-enabled {} based on existing data ({} rows).",

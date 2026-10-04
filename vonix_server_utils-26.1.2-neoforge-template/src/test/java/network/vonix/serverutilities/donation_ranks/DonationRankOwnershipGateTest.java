@@ -7,6 +7,7 @@ import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.data.DataMutateResult;
 import net.luckperms.api.node.NodeType;
+import network.vonix.serverutilities.VonixServerUtilities;
 import network.vonix.serverutilities.features.FeatureRegistry;
 import network.vonix.serverutilities.features.ServerConfigClient;
 import network.vonix.serverutilities.venary.VenaryClient;
@@ -22,6 +23,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -68,6 +75,11 @@ import com.sun.net.httpserver.HttpServer;
  * cleared fail-open map. Another reader samples the one published feature
  * snapshot while {@code update} is at its single write: every sample is the
  * complete previous state or the complete next state, never a mix.
+ *
+ * <p>A separate race holds the first-run homes auto-enable after the row
+ * count is known. An {@code update} published through the real updater, and
+ * a local disable published through {@code setEnabledLocal}, must still be
+ * present after the heuristic continues.
  *
  * <p>The public hook uses a {@code ServerPlayer} subclass whose {@code getUUID}
  * and {@code getName} count calls. The disabled case fails unless the outer
@@ -182,6 +194,8 @@ public final class DonationRankOwnershipGateTest {
             run("feature-snapshot-no-fail-open", DonationRankOwnershipGateTest::explicitDisableIsNeverTransientlyMissing);
             run("feature-missing-flag-fail-open", DonationRankOwnershipGateTest::missingFlagStaysFailOpen);
             run("feature-state-one-snapshot", DonationRankOwnershipGateTest::featureStatePublicationIsOneSnapshot);
+            run("first-run-heuristic-vs-update", DonationRankOwnershipGateTest::firstRunHeuristicKeepsExplicitUpdate);
+            run("first-run-heuristic-vs-local-disable", DonationRankOwnershipGateTest::firstRunHeuristicKeepsLocalDisable);
 
             if (!FAILURES.isEmpty()) {
                 for (String failure : FAILURES) System.err.println("FAIL: " + failure);
@@ -1365,6 +1379,221 @@ public final class DonationRankOwnershipGateTest {
         Field field = FeatureRegistry.class.getDeclaredField("publicationProbe");
         field.setAccessible(true);
         field.set(null, probe);
+    }
+
+    /**
+     * Holds the first-run auto-enable, publishes {@code duringHold} through the
+     * live registry, then lets the heuristic finish. The successor exposes
+     * {@code firstRunAutoEnableProbe} before its locked re-read. The predecessor
+     * does not, so the same regression holds the unhydrated homes publish that
+     * already captured the pre-update snapshot.
+     */
+    private static FeatureRegistry raceFirstRun(java.util.function.Consumer<FeatureRegistry> duringHold) throws Exception {
+        resetFeatureRegistry();
+        setPublicationProbe(null);
+        CountDownLatch held = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        AtomicBoolean heldOnce = new AtomicBoolean();
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        Runnable hold = () -> {
+            if (!heldOnce.compareAndSet(false, true)) return;
+            held.countDown();
+            try {
+                if (!release.await(5, TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("first-run auto-enable hold was not released");
+                }
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("first-run auto-enable hold interrupted", interrupted);
+            }
+        };
+        boolean preLock = installFirstRunProbe(hold);
+        if (!preLock) {
+            setPublicationProbe(() -> {
+                FeatureRegistry.FeatureState next;
+                try {
+                    next = pendingPublication();
+                } catch (Exception exception) {
+                    throw new IllegalStateException("could not read the pending first-run snapshot", exception);
+                }
+                if (next != null
+                        && !next.hydratedFromBackend()
+                        && next.configVersion() == -1
+                        && Boolean.TRUE.equals(next.features().get("homes"))
+                        && !next.features().containsKey("donation_ranks")) {
+                    hold.run();
+                }
+            });
+        }
+        Thread heuristic = new Thread(() -> {
+            try {
+                FeatureRegistry.getInstance();
+            } catch (Throwable thrown) {
+                failure.compareAndSet(null, thrown);
+                held.countDown();
+            }
+        }, "vsu-first-run-heuristic");
+        heuristic.setDaemon(true);
+        try {
+            heuristic.start();
+            if (!held.await(5, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("first-run auto-enable was not held; regression is inert");
+            }
+            if (failure.get() != null) {
+                throw new IllegalStateException("first-run heuristic failed before the hold", failure.get());
+            }
+            FeatureRegistry registry = FeatureRegistry.getInstance();
+            duringHold.accept(registry);
+            release.countDown();
+            heuristic.join(5_000);
+            if (heuristic.isAlive()) {
+                throw new IllegalStateException("first-run heuristic did not finish after release");
+            }
+            if (failure.get() != null) {
+                throw new IllegalStateException("first-run heuristic failed", failure.get());
+            }
+            return registry;
+        } finally {
+            release.countDown();
+            installFirstRunProbe(null);
+            setPublicationProbe(null);
+            heuristic.join(1_000);
+        }
+    }
+
+    private static boolean installFirstRunProbe(Runnable probe) throws Exception {
+        try {
+            Field field = FeatureRegistry.class.getDeclaredField("firstRunAutoEnableProbe");
+            field.setAccessible(true);
+            field.set(null, probe);
+            return true;
+        } catch (NoSuchFieldException missing) {
+            return false;
+        }
+    }
+
+    private static void resetFeatureRegistry() throws Exception {
+        Method reset = FeatureRegistry.class.getDeclaredMethod("resetForTesting");
+        reset.setAccessible(true);
+        reset.invoke(null);
+    }
+
+    private static void withHomesRows(Step body) throws Exception {
+        Path dir = Files.createTempDirectory("vsu-first-run-race");
+        Class.forName("org.sqlite.JDBC");
+        Connection conn = DriverManager.getConnection("jdbc:sqlite:" + dir.resolve("race.db"));
+        try (Statement st = conn.createStatement()) {
+            st.execute("CREATE TABLE vsu_homes (uuid TEXT NOT NULL, name TEXT NOT NULL)");
+            st.execute("INSERT INTO vsu_homes (uuid, name) VALUES ('player', 'home')");
+        }
+        Field instanceField = VonixServerUtilities.class.getDeclaredField("instance");
+        instanceField.setAccessible(true);
+        Object previous = instanceField.get(null);
+        Constructor<VonixServerUtilities> ctor = VonixServerUtilities.class.getDeclaredConstructor();
+        ctor.setAccessible(true);
+        VonixServerUtilities created = ctor.newInstance();
+        Field databaseField = VonixServerUtilities.class.getDeclaredField("database");
+        databaseField.setAccessible(true);
+        Object database = databaseField.get(created);
+        Field connectionField = database.getClass().getDeclaredField("connection");
+        connectionField.setAccessible(true);
+        connectionField.set(database, conn);
+        instanceField.set(null, created);
+        try {
+            body.run();
+        } finally {
+            try {
+                resetFeatureRegistry();
+            } catch (Exception ignored) {
+                // The assertion above is the test result.
+            }
+            instanceField.set(null, previous);
+            try {
+                created.shutdown();
+            } catch (Throwable ignored) {
+                // Daemon DB executor cleanup is best-effort.
+            }
+            try {
+                conn.close();
+            } catch (SQLException ignored) {
+                // Temp database cleanup is best-effort.
+            }
+            try (var files = Files.walk(dir)) {
+                files.sorted(java.util.Comparator.reverseOrder()).forEach(path -> {
+                    try {
+                        Files.deleteIfExists(path);
+                    } catch (Exception ignored) {
+                        // Temp database cleanup is best-effort.
+                    }
+                });
+            } catch (Exception ignored) {
+                // Temp database cleanup is best-effort.
+            }
+        }
+    }
+
+    private static JsonObject explicitDisableSnapshot() {
+        JsonObject root = new JsonObject();
+        root.addProperty("config_version", 77);
+        JsonObject features = new JsonObject();
+        features.addProperty("donation_ranks", false);
+        root.add("features", features);
+        JsonObject settings = new JsonObject();
+        JsonObject homes = new JsonObject();
+        homes.addProperty("max_homes", 77);
+        settings.add("homes", homes);
+        root.add("feature_settings", settings);
+        JsonArray ranks = new JsonArray();
+        ranks.add(rankEntry("vip", "VIP", 77));
+        root.add("donation_ranks", ranks);
+        return root;
+    }
+
+    private static void firstRunHeuristicKeepsExplicitUpdate() throws Exception {
+        withHomesRows(() -> {
+            FeatureRegistry registry = raceFirstRun(live -> live.update(explicitDisableSnapshot()));
+            FeatureRegistry.FeatureState state = registry.currentState();
+            if (!Boolean.FALSE.equals(state.features().get("donation_ranks"))
+                    || state.configVersion() != 77
+                    || !state.hydratedFromBackend()
+                    || state.donationRanks().size() != 1
+                    || !"vip".equals(state.donationRanks().get(0).luckPermsGroup)
+                    || state.donationRanks().get(0).lpWeight != 77
+                    || registry.getSetting("homes", "max_homes", -1) != 77
+                    || !Boolean.TRUE.equals(state.features().get("homes"))) {
+                throw new IllegalStateException(
+                        "explicit donation_ranks=false and newer hydrated state did not survive the first-run heuristic: "
+                                + describeState(state));
+            }
+            if (registry.isDonationRankSyncEnabled()) {
+                throw new IllegalStateException("donation_ranks accessor fail-opened after the heuristic");
+            }
+            System.out.println("first-run-heuristic-vs-update " + describeState(state));
+        });
+    }
+
+    private static void firstRunHeuristicKeepsLocalDisable() throws Exception {
+        withHomesRows(() -> {
+            FeatureRegistry registry = raceFirstRun(live -> {
+                live.setEnabledLocal("donation_ranks", false);
+                live.setEnabledLocal("homes", false);
+            });
+            FeatureRegistry.FeatureState state = registry.currentState();
+            if (!Boolean.FALSE.equals(state.features().get("donation_ranks"))
+                    || !Boolean.FALSE.equals(state.features().get("homes"))
+                    || state.configVersion() != -1
+                    || state.hydratedFromBackend()
+                    || !state.donationRanks().isEmpty()
+                    || !state.settings().isEmpty()) {
+                throw new IllegalStateException(
+                        "local donation_ranks and homes disables did not survive the first-run heuristic: "
+                                + describeState(state));
+            }
+            if (registry.isDonationRankSyncEnabled() || registry.isEnabled("homes")) {
+                throw new IllegalStateException("local disable accessors were overwritten by the heuristic");
+            }
+            System.out.println("first-run-heuristic-vs-local-disable " + describeState(state));
+        });
     }
 
     private static FeatureRegistry.FeatureState pendingPublication() throws Exception {
