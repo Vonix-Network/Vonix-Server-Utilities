@@ -43,6 +43,10 @@ dependencies {
     // Compile the ownership-gate JUnit entry. NeoForge's unit-test fixtures
     // supply junit-fml, which installs a current FML loader before the test runs.
     testImplementation "org.junit.jupiter:junit-jupiter:5.13.4"
+    // Gradle 9 does not put the JUnit Platform launcher on the test runtime
+    // classpath. Jupiter 5.13.4 brings platform engine 1.13.4, not the launcher,
+    // so the NeoForge unit-test worker stopped before discovery. Keep them aligned.
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.13.4"
     testRuntimeOnly "org.slf4j:slf4j-nop:2.0.13"
 }
 
