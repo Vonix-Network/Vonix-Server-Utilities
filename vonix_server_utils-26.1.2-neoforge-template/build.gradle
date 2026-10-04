@@ -70,8 +70,12 @@ neoForge {
     // The public RankSyncTask.onJoin(ServerPlayer) probe initializes ServerPlayer.
     // That class loads AttachmentHolder, which requires a current FML loader.
     // A plain JavaExec has none. NeoForge's unit-test session installs one.
+    // The session's ModuleClassLoader only sees test classes when testedMod
+    // names a mods {} entry. loadedMods already defaults to every such entry.
+    // ModDevGradle 2.0.140 then adds the test source set to that mod.
     unitTest {
         enable()
+        testedMod = mods.vonix_server_utilities
     }
 }
 
