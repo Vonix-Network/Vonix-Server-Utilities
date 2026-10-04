@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- When the `donation_ranks` feature is disabled, VSU no longer synchronizes per-player donation ranks or LuckPerms donation-rank group metadata. The same feature gate covers player join, `RankGroupSyncer.syncAll()` (including server start), and the sync that runs after `/minecraft/server-config` hydration or feature refresh. Enabled donation-rank behavior is unchanged. The separate Companion entitlement contract is not modified.
+- When the `donation_ranks` feature is disabled, VSU no longer synchronizes per-player donation ranks or LuckPerms donation-rank group metadata. The same feature gate covers player join, `RankGroupSyncer.syncAll()` (including server start), and the sync that runs after `/minecraft/server-config` hydration or feature refresh. A response or group sync that started while the feature was enabled does not mutate LuckPerms users or groups, save those edits, or post a player/group audit if `donation_ranks` is explicitly disabled before the LuckPerms load, create, node-edit, or save continuation runs. Flags, settings, the donation-rank list, config version, and hydration are published as one immutable snapshot, so a reader sees the complete previous feature state or the complete next feature state, never a mix. An explicit `donation_ranks=false` is never observed as a missing fail-open flag while that snapshot is replaced. A genuinely missing flag still fails open before hydration. Enabled donation-rank behavior is unchanged. The separate Companion entitlement contract is not modified.
 
 ## [2.1.2] - 2026-09-12
 

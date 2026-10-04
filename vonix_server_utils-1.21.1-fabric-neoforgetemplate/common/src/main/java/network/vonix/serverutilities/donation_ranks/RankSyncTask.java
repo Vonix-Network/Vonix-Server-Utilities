@@ -21,7 +21,12 @@ import java.util.UUID;
  * <ol>
  *   <li>Short-circuit if {@code donation_ranks} feature is disabled or
  *       LuckPerms isn't installed.</li>
- *   <li>Async {@code GET /minecraft/players/&lt;uuid&gt;/ranks} via VenaryClient.</li>
+ *   <li>Async {@code GET /minecraft/players/&lt;uuid&gt;/ranks} via VenaryClient.
+ *       The completion path re-checks the feature gate, so a fetch that
+ *       started while enabled does not mutate LuckPerms if the feature was
+ *       explicitly disabled before the response is applied. The LuckPerms
+ *       user-load, node-edit, and save continuations check again, and a
+ *       late disable does not audit a rank change.</li>
  *   <li>Build {@code shouldHaveGroups} from the response's {@code ranks[*]
  *       .luckperms_group}, filtered to non-expired entries.</li>
  *   <li>Build {@code allManagedGroups} from the cached
@@ -74,8 +79,11 @@ public final class RankSyncTask {
         if (client == null) return;
 
         client.getPlayerRanks(uuid).handle((resp, err) -> {
-            try { applyResponse(uuid, username, resp); }
-            catch (Exception e) {
+            try {
+                // Stale in-flight responses must not apply after a later disable.
+                if (!FeatureRegistry.getInstance().isDonationRankSyncEnabled()) return null;
+                applyResponse(uuid, username, resp);
+            } catch (Exception e) {
                 VonixServerUtilities.LOGGER.debug(
                         "[VonixSU/Ranks] sync for {} threw: {}", username, e.getMessage());
             }
@@ -118,7 +126,13 @@ public final class RankSyncTask {
         }
         if (managed.isEmpty()) return; // nothing to sync against
 
+        // Check again immediately before mutation. Parsing the response can
+        // race a disable that landed after the completion-path check above.
+        if (!FeatureRegistry.getInstance().isDonationRankSyncEnabled()) return;
         LuckPermsBridge.setUserGroups(uuid, shouldHave, managed).thenAccept(diff -> {
+            // Save completion can outlive the pre-call gate. Do not log or audit
+            // a mutation after donation_ranks has been explicitly disabled.
+            if (!FeatureRegistry.getInstance().isDonationRankSyncEnabled()) return;
             if (diff == null || diff.isEmpty()) return;
             VonixServerUtilities.LOGGER.info(
                     "[VonixSU/Ranks] {} synced — added {} removed {}",

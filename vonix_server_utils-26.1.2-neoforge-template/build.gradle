@@ -79,6 +79,13 @@ sourceSets {
     }
 }
 
+// ModDev exposes Minecraft on the main compile classpath only. The ownership
+// gate test calls production methods whose signatures reference those types.
+// Use that compile classpath at runtime too; the full main runtime classpath
+// pulls in the NeoForge DevLaunch launcher, which this plain JavaExec does not run.
+sourceSets.test.compileClasspath += sourceSets.main.compileClasspath
+sourceSets.test.runtimeClasspath += sourceSets.main.compileClasspath
+
 tasks.register("muteStateTest", JavaExec) {
     group = "verification"
     description = "Runs optimistic mute persistence and expiry-state regression checks."

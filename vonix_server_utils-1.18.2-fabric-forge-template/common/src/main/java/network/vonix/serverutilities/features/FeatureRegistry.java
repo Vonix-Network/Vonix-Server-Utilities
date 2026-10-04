@@ -10,11 +10,11 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * In-memory feature-flag + feature-settings + donation-rank table.
@@ -32,23 +32,31 @@ import java.util.concurrent.ConcurrentHashMap;
  * auto-enabled flags are <i>local-only</i> — the next successful poll
  * overwrites them with the canonical value from the dashboard.
  *
- * <p>Thread-safety: backed by {@link ConcurrentHashMap}, all snapshots are
- * read-only views.
+ * <p>Thread-safety: flags, settings, donation ranks, config version, and
+ * hydration are one immutable {@link FeatureState}. Publication is a single
+ * volatile write of that object. {@link #currentState()} and every accessor
+ * read that one reference, so a reader sees either the previous complete
+ * state or the next complete state, never a mix. A missing flag still fails
+ * open; an explicit {@code false} stays visible for the whole replacement.
  */
 public final class FeatureRegistry {
 
     private static volatile FeatureRegistry instance;
 
-    /** featureKey → enabled */
-    private final Map<String, Boolean> features = new ConcurrentHashMap<>();
-    /** featureKey → settings JSON object (may be empty) */
-    private final Map<String, JsonObject> settings = new ConcurrentHashMap<>();
-    /** Cached donation_ranks list (last seen from /server-config). */
-    private volatile List<DonationRank> donationRanks = Collections.emptyList();
-    /** Last seen config_version — used by the poller to detect changes. */
-    private volatile int configVersion = -1;
-    /** True once a real /server-config response has populated this registry. */
-    private volatile boolean hydratedFromBackend = false;
+    /**
+     * Test-only observation point immediately before the single state write.
+     * Production leaves this null. It is not a reader lock and it does not
+     * publish feature state.
+     */
+    private static volatile Runnable publicationProbe;
+    /** Snapshot the in-flight publication is about to store. Test-only. */
+    private static volatile FeatureState pendingPublication;
+
+    private static final FeatureState INITIAL_STATE = new FeatureState(
+            Map.of(), Map.of(), List.of(), -1, false);
+
+    /** All runtime feature state. Replaced by one volatile write. */
+    private volatile FeatureState state = INITIAL_STATE;
 
     private FeatureRegistry() {}
 
@@ -72,12 +80,20 @@ public final class FeatureRegistry {
 
     // ── Queries ─────────────────────────────────────────────────────────────
 
+    /**
+     * The one published feature state. Callers that need more than one field
+     * must use this reference instead of sampling accessors separately.
+     */
+    public FeatureState currentState() {
+        return state;
+    }
+
     /** Returns true if a feature is enabled. Unknown keys default to true
      *  (fail-open): we'd rather show a command than silently hide it before
      *  the first poll has run. */
     public boolean isEnabled(String featureKey) {
         if (featureKey == null) return true;
-        Boolean v = features.get(featureKey);
+        Boolean v = currentState().features().get(featureKey);
         return v == null || v;
     }
 
@@ -93,7 +109,7 @@ public final class FeatureRegistry {
 
     @SuppressWarnings("unchecked")
     public <T> T getSetting(String featureKey, String settingKey, T defaultValue) {
-        JsonObject o = settings.get(featureKey);
+        JsonObject o = currentState().settings().get(featureKey);
         if (o == null || !o.has(settingKey)) return defaultValue;
         try {
             JsonElement el = o.get(settingKey);
@@ -108,22 +124,22 @@ public final class FeatureRegistry {
         }
     }
 
-    public List<DonationRank> getDonationRanks() { return donationRanks; }
-    public int  getConfigVersion()               { return configVersion; }
-    public boolean isHydratedFromBackend()       { return hydratedFromBackend; }
+    public List<DonationRank> getDonationRanks() { return currentState().donationRanks(); }
+    public int  getConfigVersion()               { return currentState().configVersion(); }
+    public boolean isHydratedFromBackend()       { return currentState().hydratedFromBackend(); }
 
     /** Snapshot of all currently-known feature flags (key → enabled). */
     public Map<String, Boolean> snapshot() {
-        return Map.copyOf(features);
+        return Map.copyOf(currentState().features());
     }
 
     public Set<String> knownFeatureKeys() {
-        return Set.copyOf(features.keySet());
+        return Set.copyOf(currentState().features().keySet());
     }
 
     /** Returns the raw settings JSON for a feature, or null. */
     public JsonObject getSettings(String featureKey) {
-        return settings.get(featureKey);
+        return currentState().settings().get(featureKey);
     }
 
     // ── Mutation: from /server-config ──────────────────────────────────────
@@ -135,42 +151,70 @@ public final class FeatureRegistry {
      */
     public synchronized Delta update(JsonObject configResponse) {
         if (configResponse == null) return Delta.EMPTY;
-        Map<String, Boolean> before = Map.copyOf(features);
+        FeatureState current = currentState();
+        Map<String, Boolean> before = current.features();
 
-        // features: { homes: true, warps: false, ... }
+        // Build the next snapshot completely, then publish it with one write.
+        // Publishing the pieces separately lets a reader observe new flags
+        // with the previous ranks, settings, or config version.
+        Map<String, Boolean> nextFeatures = before;
         if (configResponse.has("features") && configResponse.get("features").isJsonObject()) {
             JsonObject f = configResponse.getAsJsonObject("features");
-            features.clear();
+            Map<String, Boolean> built = new LinkedHashMap<>();
             for (Map.Entry<String, JsonElement> e : f.entrySet()) {
-                try { features.put(e.getKey(), e.getValue().getAsBoolean()); }
+                try { built.put(e.getKey(), e.getValue().getAsBoolean()); }
                 catch (Exception ignored) {}
             }
+            nextFeatures = Map.copyOf(built);
         }
-        // feature_settings: { homes: {max_homes: 5}, ... }
+        Map<String, JsonObject> nextSettings = current.settings();
         if (configResponse.has("feature_settings") && configResponse.get("feature_settings").isJsonObject()) {
             JsonObject s = configResponse.getAsJsonObject("feature_settings");
-            settings.clear();
+            Map<String, JsonObject> built = new LinkedHashMap<>();
             for (Map.Entry<String, JsonElement> e : s.entrySet()) {
-                if (e.getValue().isJsonObject()) settings.put(e.getKey(), e.getValue().getAsJsonObject());
+                if (e.getValue().isJsonObject()) built.put(e.getKey(), e.getValue().getAsJsonObject());
             }
+            nextSettings = Map.copyOf(built);
         }
         // donation_ranks: [ {slug, name, luckperms_group, lp_weight, chat_prefix, mod_permissions, lp_meta?} ]
+        List<DonationRank> nextRanks = current.donationRanks();
         if (configResponse.has("donation_ranks") && configResponse.get("donation_ranks").isJsonArray()) {
-            JsonArray arr = configResponse.getAsJsonArray("donation_ranks");
-            this.donationRanks = DonationRank.parseAll(arr);
+            nextRanks = DonationRank.parseAll(configResponse.getAsJsonArray("donation_ranks"));
         }
+        int nextVersion = current.configVersion();
         if (configResponse.has("config_version")) {
-            try { this.configVersion = configResponse.get("config_version").getAsInt(); }
+            try { nextVersion = configResponse.get("config_version").getAsInt(); }
             catch (Exception ignored) {}
         }
-        this.hydratedFromBackend = true;
-        return Delta.between(before, features);
+        publish(new FeatureState(nextFeatures, nextSettings, nextRanks, nextVersion, true));
+        return Delta.between(before, nextFeatures);
     }
 
     /** Local-only toggle from /vonixsu feature enable|disable. */
     public synchronized boolean setEnabledLocal(String key, boolean enabled) {
-        Boolean prev = features.put(key, enabled);
+        FeatureState current = currentState();
+        Boolean prev = current.features().get(key);
+        Map<String, Boolean> next = new LinkedHashMap<>(current.features());
+        next.put(key, enabled);
+        publish(current.withFeatures(Map.copyOf(next)));
         return prev == null || prev != enabled;
+    }
+
+    /**
+     * Publishes {@code next} with one volatile write. A test probe, when
+     * installed, runs first and can still observe the previous snapshot.
+     */
+    private void publish(FeatureState next) {
+        Runnable probe = publicationProbe;
+        if (probe != null) {
+            pendingPublication = next;
+            try {
+                probe.run();
+            } finally {
+                pendingPublication = null;
+            }
+        }
+        this.state = next;
     }
 
     // ── First-run heuristic ─────────────────────────────────────────────────
@@ -201,7 +245,12 @@ public final class FeatureRegistry {
             if (rs.next()) {
                 long n = rs.getLong(1);
                 if (n > 0) {
-                    features.putIfAbsent(featureKey, true);
+                    FeatureState current = currentState();
+                    if (!current.features().containsKey(featureKey)) {
+                        Map<String, Boolean> enabled = new LinkedHashMap<>(current.features());
+                        enabled.put(featureKey, Boolean.TRUE);
+                        publish(current.withFeatures(Map.copyOf(enabled)));
+                    }
                     VonixServerUtilities.LOGGER.info(
                             "[VonixSU] Auto-enabled {} based on existing data ({} rows).",
                             featureKey, n);
@@ -213,6 +262,40 @@ public final class FeatureRegistry {
     }
 
     // ── Helper types ────────────────────────────────────────────────────────
+
+    /**
+     * Immutable flags, settings, donation ranks, config version, and hydration.
+     * One instance is published per update, local toggle, or first-run enable.
+     */
+    public static final class FeatureState {
+        private final Map<String, Boolean> features;
+        private final Map<String, JsonObject> settings;
+        private final List<DonationRank> donationRanks;
+        private final int configVersion;
+        private final boolean hydratedFromBackend;
+
+        private FeatureState(Map<String, Boolean> features,
+                             Map<String, JsonObject> settings,
+                             List<DonationRank> donationRanks,
+                             int configVersion,
+                             boolean hydratedFromBackend) {
+            this.features = features;
+            this.settings = settings;
+            this.donationRanks = donationRanks;
+            this.configVersion = configVersion;
+            this.hydratedFromBackend = hydratedFromBackend;
+        }
+
+        public Map<String, Boolean> features() { return features; }
+        public Map<String, JsonObject> settings() { return settings; }
+        public List<DonationRank> donationRanks() { return donationRanks; }
+        public int configVersion() { return configVersion; }
+        public boolean hydratedFromBackend() { return hydratedFromBackend; }
+
+        private FeatureState withFeatures(Map<String, Boolean> nextFeatures) {
+            return new FeatureState(nextFeatures, settings, donationRanks, configVersion, hydratedFromBackend);
+        }
+    }
 
     /** Immutable view of a donation rank entry from /server-config. */
     public static final class DonationRank {

@@ -23,7 +23,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>The pass no-ops when {@link FeatureRegistry#isDonationRankSyncEnabled()}
  * is false, and when LuckPerms is missing (the bridge already logs the
  * warning). A disabled feature fails closed: cached rank rows are not
- * pushed into LuckPerms.
+ * pushed into LuckPerms. Group load, create, attribute, and save
+ * continuations check the gate again, and a completion that lands after a
+ * disable does not audit a group create or update.
  */
 public final class RankGroupSyncer {
 
@@ -69,6 +71,11 @@ public final class RankGroupSyncer {
                 LuckPermsBridge.ensureGroupExists(
                         rank.luckPermsGroup, rank.lpWeight, rank.chatPrefix, meta, rank.modPermissions
                 ).whenComplete((res, err) -> {
+                    if (!FeatureRegistry.getInstance().isDonationRankSyncEnabled()) {
+                        // Completion ran after a disable: do not claim a create or update.
+                        if (pending.decrementAndGet() == 0) logSummary(created, updated, ok, errors);
+                        return;
+                    }
                     if (err != null || res == LuckPermsBridge.GroupEnsureResult.ERROR) {
                         errors.incrementAndGet();
                     } else if (res == LuckPermsBridge.GroupEnsureResult.CREATED) {

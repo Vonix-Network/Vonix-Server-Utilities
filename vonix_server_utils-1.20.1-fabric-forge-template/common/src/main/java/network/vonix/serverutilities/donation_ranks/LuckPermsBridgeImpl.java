@@ -13,6 +13,7 @@ import net.luckperms.api.node.types.InheritanceNode;
 import net.luckperms.api.node.types.PrefixNode;
 import net.luckperms.api.node.types.WeightNode;
 import network.vonix.serverutilities.VonixServerUtilities;
+import network.vonix.serverutilities.features.FeatureRegistry;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -66,6 +67,9 @@ final class LuckPermsBridgeImpl {
         LuckPerms lp = lpOpt.get();
 
         return lp.getGroupManager().loadGroup(groupName).thenCompose(opt -> {
+            if (!donationRankWritesAllowed()) {
+                return CompletableFuture.completedFuture(LuckPermsBridge.GroupEnsureResult.SKIPPED);
+            }
             CompletableFuture<Group> created;
             boolean wasCreated;
             if (opt.isPresent()) {
@@ -77,14 +81,22 @@ final class LuckPermsBridgeImpl {
             }
             final boolean createdFlag = wasCreated;
             return created.thenCompose(group -> {
+                if (!donationRankWritesAllowed()) {
+                    return CompletableFuture.completedFuture(LuckPermsBridge.GroupEnsureResult.SKIPPED);
+                }
                 boolean changed = applyGroupAttributes(group, weight, prefix, meta, permissions);
                 if (!changed && !createdFlag) {
                     return CompletableFuture.completedFuture(LuckPermsBridge.GroupEnsureResult.OK);
                 }
+                if (!donationRankWritesAllowed()) {
+                    return CompletableFuture.completedFuture(LuckPermsBridge.GroupEnsureResult.SKIPPED);
+                }
                 return lp.getGroupManager().saveGroup(group)
-                        .thenApply(v -> createdFlag
-                                ? LuckPermsBridge.GroupEnsureResult.CREATED
-                                : LuckPermsBridge.GroupEnsureResult.UPDATED);
+                        .thenApply(v -> donationRankWritesAllowed()
+                                ? (createdFlag
+                                        ? LuckPermsBridge.GroupEnsureResult.CREATED
+                                        : LuckPermsBridge.GroupEnsureResult.UPDATED)
+                                : LuckPermsBridge.GroupEnsureResult.SKIPPED);
             });
         }).exceptionally(t -> {
             VonixServerUtilities.LOGGER.warn("[VonixSU] ensureGroupExists({}) failed: {}", groupName, t.getMessage());
@@ -93,6 +105,7 @@ final class LuckPermsBridgeImpl {
     }
 
     private static boolean applyGroupAttributes(Group group, int weight, String prefix, Map<String, String> meta, List<String> permissions) {
+        if (!donationRankWritesAllowed()) return false;
         boolean changed = false;
         NodeMap data = group.data();
 
@@ -172,6 +185,9 @@ final class LuckPermsBridgeImpl {
 
         LuckPerms lp = lpOpt.get();
         return lp.getUserManager().loadUser(player).thenCompose(user -> {
+            if (!donationRankWritesAllowed()) {
+                return CompletableFuture.completedFuture(LuckPermsBridge.Diff.EMPTY);
+            }
             if (user == null) return CompletableFuture.completedFuture(LuckPermsBridge.Diff.EMPTY);
             Set<String> currentManaged = new LinkedHashSet<>();
             for (Node n : user.data().toCollection()) {
@@ -197,6 +213,9 @@ final class LuckPermsBridgeImpl {
 
     private static CompletableFuture<LuckPermsBridge.Diff> applyDiff(LuckPerms lp, User user,
                                                                     Set<String> toAdd, Set<String> toRemove) {
+        if (!donationRankWritesAllowed()) {
+            return CompletableFuture.completedFuture(LuckPermsBridge.Diff.EMPTY);
+        }
         for (String g : toRemove) {
             for (Node n : new HashSet<>(user.data().toCollection())) {
                 if (n instanceof InheritanceNode in
@@ -208,8 +227,22 @@ final class LuckPermsBridgeImpl {
         for (String g : toAdd) {
             user.data().add(InheritanceNode.builder(g).build());
         }
+        if (!donationRankWritesAllowed()) {
+            return CompletableFuture.completedFuture(LuckPermsBridge.Diff.EMPTY);
+        }
         return lp.getUserManager().saveUser(user)
-                .thenApply(v -> new LuckPermsBridge.Diff(Set.copyOf(toAdd), Set.copyOf(toRemove)));
+                .thenApply(v -> donationRankWritesAllowed()
+                        ? new LuckPermsBridge.Diff(Set.copyOf(toAdd), Set.copyOf(toRemove))
+                        : LuckPermsBridge.Diff.EMPTY);
+    }
+
+    /**
+     * Authoritative donation-rank gate for work that runs after LuckPerms
+     * accepts a load or save. Checked again at each continuation so a disable
+     * that lands after the bridge call cannot still mutate users or groups.
+     */
+    private static boolean donationRankWritesAllowed() {
+        return FeatureRegistry.getInstance().isDonationRankSyncEnabled();
     }
 
     static Optional<LuckPermsBridge.UserPrefixInfo> getUserPrefixInfo(UUID player) {
