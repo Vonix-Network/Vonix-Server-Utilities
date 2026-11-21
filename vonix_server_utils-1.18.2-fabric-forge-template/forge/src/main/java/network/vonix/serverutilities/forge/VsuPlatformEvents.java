@@ -6,14 +6,19 @@ import dev.architectury.event.events.common.EntityEvent;
 import dev.architectury.event.events.common.LifecycleEvent;
 import dev.architectury.event.events.common.PlayerEvent;
 import dev.architectury.event.events.common.TickEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraft.server.level.ServerPlayer;
 import network.vonix.serverutilities.platform.PlatformEvents;
+import network.vonix.serverutilities.pvp.PvpManager;
 
 import java.nio.file.Path;
 
 public final class VsuPlatformEvents implements PlatformEvents {
     @Override
     public void register(Callbacks c) {
+        MinecraftForge.EVENT_BUS.register(VsuPlatformEvents.class);
         CommandRegistrationEvent.EVENT.register((dispatcher, ignored) -> c.commands().accept(dispatcher));
         LifecycleEvent.SERVER_STARTING.register(server -> c.serverStarting().accept(server));
         LifecycleEvent.SERVER_STARTED.register(server -> c.serverStarted().accept(server));
@@ -26,6 +31,13 @@ public final class VsuPlatformEvents implements PlatformEvents {
             c.livingDeath().accept(entity, source);
             return EventResult.pass();
         });
+    }
+
+    @SubscribeEvent
+    public static void onLivingAttack(LivingAttackEvent event) {
+        if (PvpManager.shouldCancelDamage(event.getEntityLiving(), event.getSource())) {
+            event.setCanceled(true);
+        }
     }
 
     @Override

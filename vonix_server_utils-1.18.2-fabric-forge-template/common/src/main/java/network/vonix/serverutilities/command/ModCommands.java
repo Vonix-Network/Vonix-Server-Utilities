@@ -19,6 +19,7 @@ import network.vonix.serverutilities.features.FeatureGate;
 import network.vonix.serverutilities.features.PermissionGate;
 import network.vonix.serverutilities.homes.HomeManager;
 import network.vonix.serverutilities.kits.KitManager;
+import network.vonix.serverutilities.pvp.PvpManager;
 import network.vonix.serverutilities.teleport.TeleportManager;
 import network.vonix.serverutilities.warps.WarpManager;
 
@@ -41,7 +42,24 @@ public final class ModCommands {
         registerKits(dispatcher);
         registerAdmin(dispatcher);
         registerSpawn(dispatcher);
+        registerPvp(dispatcher);
         registerVonixSu(dispatcher);
+    }
+
+    private static void registerPvp(CommandDispatcher<CommandSourceStack> d) {
+        d.register(Commands.literal("pvp")
+                .requires(PermissionGate.requires("pvp", "vsu.command.pvp", 0))
+                .executes(ModCommands::togglePvp));
+    }
+
+    private static int togglePvp(CommandContext<CommandSourceStack> ctx) {
+        ServerPlayer player = ctx.getSource().getEntity() instanceof ServerPlayer __sp_player ? __sp_player : null;
+        if (player == null) return 0;
+        boolean enabled = PvpManager.toggle(player);
+        player.sendMessage(new TextComponent(enabled
+                ? "§a[VSU] PvP enabled."
+                : "§e[VSU] PvP disabled."), net.minecraft.Util.NIL_UUID);
+        return 1;
     }
 
     // ── Shared helper ─────────────────────────────────────────────────────────

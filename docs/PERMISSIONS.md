@@ -1,6 +1,6 @@
 # VSU Permissions Reference
 
-Canonical permission node tree for Vonix Server Utilities v2.2.0. Every command in [COMMANDS.md](COMMANDS.md) is gated by exactly one node from this document.
+Canonical permission node tree for Vonix Server Utilities v2.3.0. Every command in [COMMANDS.md](COMMANDS.md) is gated by exactly one node from this document.
 
 ## Table of contents
 
@@ -76,6 +76,7 @@ Sorted alphabetically by command. Sub-variants (e.g. `/nick self` vs `/nick <pla
 | `/nick <player>` | `vsu.admin.nick` | 2 |
 | `/ping` | `vsu.command.utility` | 0 |
 | `/playtime` | `vsu.command.utility` | 0 |
+| `/pvp` | `vsu.command.pvp` | 0 |
 | `/repair` | `vsu.command.utility` | 0 |
 | `/seen` | `vsu.command.utility` | 0 |
 | `/setspawn` | `vsu.admin.setspawn` | 2 |
@@ -92,7 +93,7 @@ Sorted alphabetically by command. Sub-variants (e.g. `/nick self` vs `/nick <pla
 
 ## Standalone boundary
 
-VSU 2.2.0 is server-local. It ships no account-link, site, remote HTTP, player-sync, donation-rank, or feature-polling permission nodes; the remaining `vsu.*` nodes are enforced through LuckPerms when present, with the documented vanilla op fallback.
+VSU 2.3.0 is server-local. It ships no account-link, site, remote HTTP, player-sync, donation-rank, or feature-polling permission nodes; the remaining `vsu.*` nodes are enforced through LuckPerms when present, with the documented vanilla op fallback.
 
 ## Bypass nodes
 

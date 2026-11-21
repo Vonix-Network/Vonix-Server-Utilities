@@ -9,6 +9,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.level.ServerPlayer;
 import network.vonix.serverutilities.inventory.fabric.AccessoryHelperImpl;
 import network.vonix.serverutilities.platform.PlatformEvents;
+import network.vonix.serverutilities.pvp.PvpManager;
 
 import java.nio.file.Path;
 
@@ -30,6 +31,8 @@ public final class VsuPlatformEvents implements PlatformEvents {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
                 callbacks.playerQuit().accept(handler.player));
         ServerLivingEntityEvents.AFTER_DEATH.register(callbacks.livingDeath()::accept);
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) ->
+                !PvpManager.shouldCancelDamage(entity, source));
     }
 
     @Override

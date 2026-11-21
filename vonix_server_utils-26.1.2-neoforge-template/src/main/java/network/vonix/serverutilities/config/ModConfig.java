@@ -16,6 +16,7 @@ public final class ModConfig {
     private int tpaTimeoutSeconds = 120;
     private int deathBackDelaySeconds = 0;
     private int playtimeKeyIntervalMinutes = 60;
+    private boolean pvpDefaultEnabled = false;
 
 
     private ModConfig() {}
@@ -55,6 +56,7 @@ public final class ModConfig {
         tpaTimeoutSeconds     = intOf(p, "tpa_timeout_seconds", 120);
         deathBackDelaySeconds = intOf(p, "death_back_delay_seconds", 0);
         playtimeKeyIntervalMinutes = Math.max(1, intOf(p, "playtime_key_interval_minutes", 60));
+        pvpDefaultEnabled = boolOf(p, "pvp_default_enabled", false);
 
     }
 
@@ -73,6 +75,9 @@ public final class ModConfig {
 
                         # Minutes of playtime required for each automatic Playtime Key.
                         playtime_key_interval_minutes=60
+
+                        # Whether players start with their personal PvP toggle enabled.
+                        pvp_default_enabled=false
 
                         """);
             }
@@ -104,5 +109,6 @@ public final class ModConfig {
     public long getTpaTimeoutMs()         { return tpaTimeoutSeconds * 1000L; }
     public int getDeathBackDelaySeconds() { return deathBackDelaySeconds; }
     public int getPlaytimeKeyIntervalMinutes() { return playtimeKeyIntervalMinutes; }
+    public boolean getPvpDefaultEnabled() { return pvpDefaultEnabled; }
 
 }

@@ -6,8 +6,10 @@ import dev.architectury.event.events.common.EntityEvent;
 import dev.architectury.event.events.common.LifecycleEvent;
 import dev.architectury.event.events.common.PlayerEvent;
 import dev.architectury.event.events.common.TickEvent;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.server.level.ServerPlayer;
 import network.vonix.serverutilities.platform.PlatformEvents;
+import network.vonix.serverutilities.pvp.PvpManager;
 
 import java.nio.file.Path;
 
@@ -26,6 +28,8 @@ public final class VsuPlatformEvents implements PlatformEvents {
             c.livingDeath().accept(entity, source);
             return EventResult.pass();
         });
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) ->
+                !PvpManager.shouldCancelDamage(entity, source));
     }
 
     @Override

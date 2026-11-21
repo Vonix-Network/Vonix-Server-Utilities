@@ -2,9 +2,9 @@
 
 A server-side essentials mod for Minecraft — homes, warps, kits, teleport, social, admin tooling, moderation, and native LuckPerms-aware permissions — built on **Architectury** for **Forge, NeoForge, and Fabric** across the supported Minecraft target versions.
 
-**Current embedded mod version:** `2.2.0` (standalone candidate) · **Common repository line:** `2.2.0` · See [CHANGELOG.md](CHANGELOG.md) · License: All Rights Reserved (Vonix Network)
+**Current embedded mod version:** `2.3.0` (stable release) · **Common repository line:** `2.3.0` · See [CHANGELOG.md](CHANGELOG.md) · License: All Rights Reserved (Vonix Network)
 
-The Minecraft **26.1.2 / NeoForge 26.1.2.93** lane is included in the `2.2.0` standalone candidate under `vonix_server_utils-26.1.2-neoforge-template/`. Its artifact uses the same exact embedded release version as the other lanes.
+The Minecraft **26.1.2 / NeoForge 26.1.2.93** lane is included in the `2.3.0` stable release under `vonix_server_utils-26.1.2-neoforge-template/`. Its artifact uses the same exact embedded release version as the other lanes.
 
 ---
 
@@ -15,6 +15,7 @@ The Minecraft **26.1.2 / NeoForge 26.1.2.93** lane is included in the `2.2.0` st
 - **Moderation (v1.7.1)** — SQLite-backed `/tempban`, `/mute`, `/kick`, `/warn`, `/banlist` with duration parser, race-safe mute enforcement, and expiry sweeper.
 - **LuckPerms-aware permissions (v1.6.0)** — every command has a `vsu.*` permission node, with graceful vanilla op-level fallback when LuckPerms is absent.
 - **Native chat formatting (v2.2.0)** — optional LuckPerms prefix, suffix, and name-color metadata in server chat, with safe fallback when LuckPerms is absent.
+- **Optional personal PvP (v2.3.0)** — `/pvp` toggles each player's damage participation, with a configurable default and SQLite-persisted preferences.
 
 ---
 
@@ -62,7 +63,7 @@ Full command reference: **[docs/COMMANDS.md](docs/COMMANDS.md)**.
 - **[docs/COMMANDS.md](docs/COMMANDS.md)** — every command, usage, permission node, op-fallback, example.
 - **[docs/PERMISSIONS.md](docs/PERMISSIONS.md)** — full `vsu.*` permission tree and LuckPerms group recipes.
 - **[docs/MODERATION.md](docs/MODERATION.md)** — duration syntax, escalation, audit, bypass nodes, restoring a wrongful ban.
-- **[docs/COMMON-V2-REPOSITORY.md](docs/COMMON-V2-REPOSITORY.md)** — the `2.2.0` five-lane repository layout, standalone boundary, and build expectations.
+- **[docs/COMMON-V2-REPOSITORY.md](docs/COMMON-V2-REPOSITORY.md)** — the `2.3.0` five-lane repository layout, standalone boundary, and build expectations.
 - **[docs/GAP-ANALYSIS-v1.6.0.md](docs/GAP-ANALYSIS-v1.6.0.md)** — v1.6.0 scope vs. industry essentials baselines.
 - **[docs/V1.6.0-SPEC.md](docs/V1.6.0-SPEC.md)** — authoritative implementation spec for the v1.6.0 release.
 - **[CHANGELOG.md](CHANGELOG.md)** — release history (Keep-a-Changelog format).
@@ -93,6 +94,7 @@ Config file: `config/vonix_server_utilities.properties` (generated on first laun
 max_homes=5
 tpa_timeout_seconds=120
 death_back_delay_seconds=0
+pvp_default_enabled=false
 ```
 
 Configuration is local to the server. `/vonixsu reload` rereads the properties file and kit definitions; there is no remote feature service or runtime feature-polling command.

@@ -21,7 +21,7 @@ side = "BOTH"
 [[dependencies.vonix_server_utilities]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.21.1,)"
+versionRange = "[1.21.1,1.21.2)"
 ordering = "NONE"
 side = "BOTH"
 

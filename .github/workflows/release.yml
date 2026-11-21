@@ -52,9 +52,11 @@ jobs:
           VERSION: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          JAR="$(find . -type f -path '*/build/libs/*.jar' -name "$JAR_PATTERN" ! -name '*sources*' ! -name '*dev*' ! -name '*shadow*' ! -name '*slim*' | head -n 1)"
-          test -n "$JAR"
-          ASSET_NAME="${{ matrix.asset_base }}-${VERSION#v}"
+          VERSION="${VERSION#v}"
+          mapfile -t JARS < <(find . -type f -path '*/build/libs/*.jar' -name "$JAR_PATTERN" ! -name '*sources*' ! -name '*dev*' ! -name '*shadow*' ! -name '*slim*' -name "*-${VERSION}.jar" | sort)
+          test "${#JARS[@]}" -eq 1
+          JAR="${JARS[0]}"
+          ASSET_NAME="${{ matrix.asset_base }}-${VERSION}"
           mkdir -p "$RUNNER_TEMP/release"
           cp "$JAR" "$RUNNER_TEMP/release/${ASSET_NAME}.jar"
           echo "path=$RUNNER_TEMP/release/${ASSET_NAME}.jar" >> "$GITHUB_OUTPUT"

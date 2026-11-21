@@ -6,6 +6,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
@@ -14,6 +15,7 @@ import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import network.vonix.serverutilities.inventory.neoforge.AccessoryHelperImpl;
 import network.vonix.serverutilities.platform.PlatformEvents;
+import network.vonix.serverutilities.pvp.PvpManager;
 
 import java.nio.file.Path;
 
@@ -73,6 +75,13 @@ public final class VsuPlatformEvents implements PlatformEvents {
     @SubscribeEvent
     public void onLivingDeath(LivingDeathEvent event) {
         callbacks.livingDeath().accept(event.getEntity(), event.getSource());
+    }
+
+    @SubscribeEvent
+    public void onLivingIncomingDamage(LivingIncomingDamageEvent event) {
+        if (PvpManager.shouldCancelDamage(event.getEntity(), event.getSource())) {
+            event.setCanceled(true);
+        }
     }
 
     @Override

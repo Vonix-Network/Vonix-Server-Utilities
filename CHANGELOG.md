@@ -2,8 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [2.3.0] - 2026-11-21
+
+### Added
+- Add `/pvp` for players to toggle their personal PvP participation, gated by `vsu.command.pvp`.
+- Add `pvp_default_enabled` (default `false`) so operators can choose the initial PvP state for players who have no saved preference.
+
+### Changed
+- Persist each player's PvP preference in the existing VSU SQLite database; a saved choice overrides the configured default without changing other players' state.
+- Keep server-wide vanilla PvP enabled while VSU is active: legacy lanes persist `pvp=true` in `server.properties`, while 26.1.2 uses the upstream `minecraft:pvp` gamerule.
+
+### Fixed
+- Enforce player-to-player damage only when both participants have PvP enabled across all nine Fabric, Forge, and NeoForge artifacts, including the 1.18.2 Fabric compatibility hook.
+- Register the PvP command and persistence lifecycle in every maintained Minecraft lane.
 
 ## [2.2.0] - 2026-09-12
 
@@ -622,4 +638,25 @@ Initial release. Minecraft 1.21.1 on Fabric and NeoForge via Architectury.
 - **Configuration** — auto-generated `config/vonix_server_utilities.properties`.
 - **Storage** — SQLite at `config/vonix_server_utilities/data.db`, WAL mode,
   opened on `SERVER_STARTING` / closed on `SERVER_STOPPED`.
+
+[Unreleased]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v2.2.0...v2.3.0
+[2.2.0]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v2.1.2...v2.2.0
+[2.1.2]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v2.1.1...v2.1.2
+[2.1.1]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v2.1.0...v2.1.1
+[2.1.0]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v2.0.0...v2.1.0
+[2.0.0]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v1.7.1...v2.0.0
+[1.7.1]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v1.7.0...v1.7.1
+[1.7.0]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v1.6.1...v1.7.0
+[1.6.1]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v1.6.0...v1.6.1
+[1.6.0]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v1.5.2...v1.6.0
+[1.5.2]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v1.5.1...v1.5.2
+[1.5.1]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v1.5.0...v1.5.1
+[1.5.0]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v1.4.0...v1.5.0
+[1.4.0]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v1.0.1...v1.1.0
+[1.0.1]: https://github.com/Vonix-Network/Vonix-Server-Utilities/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/Vonix-Network/Vonix-Server-Utilities/releases/tag/v1.0.0
 

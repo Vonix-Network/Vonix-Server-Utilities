@@ -13,6 +13,7 @@ import network.vonix.serverutilities.config.ModConfig;
 import network.vonix.serverutilities.crates.CratePlaytimeTask;
 import network.vonix.serverutilities.moderation.ModerationBootstrap;
 import network.vonix.serverutilities.platform.PlatformEvents;
+import network.vonix.serverutilities.pvp.PvpManager;
 import network.vonix.serverutilities.teleport.TeleportManager;
 
 /** Shared behavior; Fabric and Forge modules provide event delivery. */
@@ -35,6 +36,7 @@ public final class EventHandler {
 
     private static void serverStarting(MinecraftServer s) {
         ModConfig.INSTANCE.load(s.getServerDirectory().toPath().resolve("config"));
+        PvpManager.onServerStarting(s);
         VonixServerUtilities.getInstance().getDatabase().init(s);
         VonixServerUtilities.dbAsync(() -> { try {
             TeleportManager.getInstance().hydrateFromDb(); UtilityCommands.hydrateFromDb();
@@ -52,12 +54,14 @@ public final class EventHandler {
     private static void serverStopping(MinecraftServer s) { ModerationBootstrap.serverStopping(s); }
     private static void serverStopped(MinecraftServer s) {
         TeleportManager.getInstance().clear(); AdminManager.getInstance().clear(); CratePlaytimeTask.clear();
+        PvpManager.onServerStopped();
         VonixServerUtilities.getInstance().shutdown(); VonixServerUtilities.getInstance().getDatabase().close();
     }
     private static void serverTick(MinecraftServer s) { CratePlaytimeTask.onServerTick(s); }
-    private static void playerJoin(ServerPlayer p) { UtilityCommands.onPlayerJoin(p); }
+    private static void playerJoin(ServerPlayer p) { UtilityCommands.onPlayerJoin(p); PvpManager.onPlayerJoin(p); }
     private static void playerQuit(ServerPlayer p) {
         UtilityCommands.onPlayerLeave(p.getUUID());
+        PvpManager.onPlayerQuit(p.getUUID());
         TeleportManager.getInstance().clearPlayer(p.getUUID());
     }
     private static void livingDeath(LivingEntity e, DamageSource s) {

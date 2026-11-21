@@ -9,6 +9,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
@@ -24,6 +25,7 @@ import network.vonix.serverutilities.command.WorldCommands;
 import network.vonix.serverutilities.config.ModConfig;
 import network.vonix.serverutilities.crates.CratePlaytimeTask;
 import network.vonix.serverutilities.moderation.ModerationBootstrap;
+import network.vonix.serverutilities.pvp.PvpManager;
 import network.vonix.serverutilities.teleport.TeleportManager;
 
 /** Native NeoForge adapter for the 1.21.1 EventHandler lifecycle sequence. */
@@ -80,6 +82,13 @@ public final class EventHandler {
         livingDeath(event.getEntity(), event.getSource());
     }
 
+    @SubscribeEvent
+    public static void pvp(LivingIncomingDamageEvent event) {
+        if (PvpManager.shouldCancelDamage(event.getEntity(), event.getSource())) {
+            event.setCanceled(true);
+        }
+    }
+
     private static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
         ModCommands.register(dispatcher); CrateCommands.register(dispatcher);
         UtilityCommands.register(dispatcher); WorldCommands.register(dispatcher);
@@ -89,6 +98,7 @@ public final class EventHandler {
 
     private static void serverStarting(MinecraftServer server) {
         ModConfig.INSTANCE.load(server.getServerDirectory().resolve("config"));
+        PvpManager.onServerStarting(server);
         VonixServerUtilities.getInstance().getDatabase().init(server);
         VonixServerUtilities.dbAsync(() -> {
             try {
@@ -110,10 +120,11 @@ public final class EventHandler {
     private static void serverStopping(MinecraftServer server) { ModerationBootstrap.serverStopping(server); }
     private static void serverStopped(MinecraftServer server) {
         TeleportManager.getInstance().clear(); AdminManager.getInstance().clear(); CratePlaytimeTask.clear();
+        PvpManager.onServerStopped();
         VonixServerUtilities.getInstance().shutdown(); VonixServerUtilities.getInstance().getDatabase().close();
     }
     private static void serverTick(MinecraftServer server) { CratePlaytimeTask.onServerTick(server); }
-    private static void playerJoin(ServerPlayer player) { UtilityCommands.onPlayerJoin(player); }
-    private static void playerQuit(ServerPlayer player) { UtilityCommands.onPlayerLeave(player.getUUID()); TeleportManager.getInstance().clearPlayer(player.getUUID()); }
+    private static void playerJoin(ServerPlayer player) { UtilityCommands.onPlayerJoin(player); PvpManager.onPlayerJoin(player); }
+    private static void playerQuit(ServerPlayer player) { UtilityCommands.onPlayerLeave(player.getUUID()); PvpManager.onPlayerQuit(player.getUUID()); TeleportManager.getInstance().clearPlayer(player.getUUID()); }
     private static void livingDeath(LivingEntity entity, DamageSource source) { if (entity instanceof ServerPlayer player) TeleportManager.getInstance().saveDeathLocation(player); }
 }

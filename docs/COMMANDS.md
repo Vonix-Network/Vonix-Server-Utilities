@@ -1,12 +1,13 @@
 # VSU Command Reference
 
-Alphabetical reference for every command shipped with Vonix Server Utilities v2.2.0.
+Alphabetical reference for every command shipped with Vonix Server Utilities v2.3.0.
 
 Every command goes through `PermissionGate`: if LuckPerms is installed the listed **node** is checked; if not, the listed **op level** is required. Console always passes.
 
 ## Categories
 
 - [Movement](#movement) — `/home`, `/warp`, `/tpa`, `/back`, `/spawn`, teleport admin
+- [Combat](#combat) — `/pvp`
 - [Social](#social) — `/msg`, `/r`, `/ignore`, `/broadcast`, `/nick`
 - [Utility](#utility) — `/hat`, `/repair`, `/seen`, `/playtime`, `/list`, inventory peeks
 - [Admin](#admin) — `/heal`, `/fly`, `/god`, `/vanish`, `/gm`, `/vonixsu`
@@ -48,6 +49,16 @@ Every command goes through `PermissionGate`: if LuckPerms is installed the liste
 /tpa Steve
 /warp shop
 ```
+
+---
+
+## Combat
+
+| Command | Usage | Node | Op fallback | Description |
+|---|---|---|---|---|
+| `/pvp` | `/pvp` | `vsu.command.pvp` | 0 | Toggle your personal PvP state. Player damage is applied only when both players have PvP enabled. |
+
+On 1.18.2–1.21.1, the server-wide `pvp` value in `server.properties` is kept at `true` while VSU is active so the per-player toggle can enforce the opt-in boundary. Minecraft 26.1.2 removed that properties key; the 26.1.2 VSU lane forces the equivalent `GameRules.PVP` gamerule instead. Set `pvp_default_enabled=true` in `config/vonix_server_utilities.properties` to make new players start enabled; each player's `/pvp` choice is persisted in the VSU database.
 
 ---
 

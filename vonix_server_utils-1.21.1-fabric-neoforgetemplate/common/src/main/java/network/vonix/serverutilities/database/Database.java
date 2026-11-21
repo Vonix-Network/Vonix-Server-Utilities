@@ -141,6 +141,13 @@ public final class Database {
                     PRIMARY KEY (owner_uuid, target_uuid)
                 )""");
 
+            // Per-player PvP preference (1 = enabled, 0 = disabled).
+            s.execute("""
+                CREATE TABLE IF NOT EXISTS vsu_pvp_preferences (
+                    uuid    TEXT PRIMARY KEY,
+                    enabled INTEGER NOT NULL
+                )""");
+
             // One-time migration tracking
             s.execute("""
                 CREATE TABLE IF NOT EXISTS vsu_migration (
@@ -562,6 +569,33 @@ public final class Database {
             VonixServerUtilities.LOGGER.error("[VonixSU] getAllIgnores failed", e);
         }
         return out;
+    }
+
+    // ── PvP preference persistence ───────────────────────────────────────────
+
+    /** Returns the saved preference, or null when this player has never toggled PvP. */
+    public Boolean getPvpPreference(java.util.UUID uuid) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT enabled FROM vsu_pvp_preferences WHERE uuid=?")) {
+            ps.setString(1, uuid.toString());
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) != 0 : null;
+            }
+        } catch (SQLException e) {
+            VonixServerUtilities.LOGGER.error("[VonixSU] getPvpPreference failed", e);
+            return null;
+        }
+    }
+
+    public void setPvpPreference(java.util.UUID uuid, boolean enabled) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO vsu_pvp_preferences (uuid, enabled) VALUES (?, ?)")) {
+            ps.setString(1, uuid.toString());
+            ps.setInt(2, enabled ? 1 : 0);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            VonixServerUtilities.LOGGER.error("[VSU] setPvpPreference failed", e);
+        }
     }
 
     // ── Public API ────────────────────────────────────────────────────────────

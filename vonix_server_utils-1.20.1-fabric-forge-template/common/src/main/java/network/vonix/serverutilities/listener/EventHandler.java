@@ -16,6 +16,7 @@ import network.vonix.serverutilities.config.ModConfig;
 import network.vonix.serverutilities.crates.CratePlaytimeTask;
 import network.vonix.serverutilities.moderation.ModerationBootstrap;
 import network.vonix.serverutilities.platform.PlatformEvents;
+import network.vonix.serverutilities.pvp.PvpManager;
 import network.vonix.serverutilities.teleport.TeleportManager;
 
 /** Shared lifecycle behavior; loader modules provide event delivery. */
@@ -40,6 +41,7 @@ public final class EventHandler {
     private static void serverStarting(MinecraftServer server) {
         // 1.20.1 getServerDirectory() returns File; Path comes from toPath().
         ModConfig.INSTANCE.load(server.getServerDirectory().toPath().resolve("config"));
+        PvpManager.onServerStarting(server);
         VonixServerUtilities.getInstance().getDatabase().init(server);
         VonixServerUtilities.dbAsync(() -> {
             try {
@@ -61,10 +63,11 @@ public final class EventHandler {
     private static void serverStopping(MinecraftServer server) { ModerationBootstrap.serverStopping(server); }
     private static void serverStopped(MinecraftServer server) {
         TeleportManager.getInstance().clear(); AdminManager.getInstance().clear(); CratePlaytimeTask.clear();
+        PvpManager.onServerStopped();
         VonixServerUtilities.getInstance().shutdown(); VonixServerUtilities.getInstance().getDatabase().close();
     }
     private static void serverTick(MinecraftServer server) { CratePlaytimeTask.onServerTick(server); }
-    private static void playerJoin(ServerPlayer player) { UtilityCommands.onPlayerJoin(player); }
-    private static void playerQuit(ServerPlayer player) { UtilityCommands.onPlayerLeave(player.getUUID()); TeleportManager.getInstance().clearPlayer(player.getUUID()); }
+    private static void playerJoin(ServerPlayer player) { UtilityCommands.onPlayerJoin(player); PvpManager.onPlayerJoin(player); }
+    private static void playerQuit(ServerPlayer player) { UtilityCommands.onPlayerLeave(player.getUUID()); PvpManager.onPlayerQuit(player.getUUID()); TeleportManager.getInstance().clearPlayer(player.getUUID()); }
     private static void livingDeath(LivingEntity entity, DamageSource source) { if (entity instanceof ServerPlayer player) TeleportManager.getInstance().saveDeathLocation(player); }
 }
